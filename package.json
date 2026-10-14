@@ -1,0 +1,13 @@
+{
+  "name": "active-theory",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Zero-dependency local static dev server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}
