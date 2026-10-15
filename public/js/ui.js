@@ -43,6 +43,7 @@ export class UI {
         this.onEnter = null;
         this.entered = false;
         this.modalOpen = false;
+        this.infoOpen = false;
 
         // DOM elements
         this.cursor = document.getElementById('cursor');
@@ -197,25 +198,42 @@ export class UI {
         this.modalBackdrop?.addEventListener('click', () => this.closeCaseStudy());
 
         // Info modal handlers
-        this.infoBtn?.addEventListener('click', () => {
-            this.infoModal.classList.add('active');
-            this.audio.tick(2000);
-        });
-        this.infoClose?.addEventListener('click', () => {
-            this.infoModal.classList.remove('active');
-            this.audio.tick(1400);
-        });
-        this.infoBackdrop?.addEventListener('click', () => {
-            this.infoModal.classList.remove('active');
-            this.audio.tick(1400);
-        });
+        this.infoBtn?.addEventListener('click', () => this.openInfo());
+        this.infoClose?.addEventListener('click', () => this.closeInfo());
+        this.infoBackdrop?.addEventListener('click', () => this.closeInfo());
 
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                if (this.modalOpen) this.closeCaseStudy();
-                this.infoModal?.classList.remove('active');
+                this.closeCaseStudy();
+                this.closeInfo();
             }
         });
+    }
+
+    setModalVisible(modal, visible, focusEl) {
+        modal.classList.toggle('active', visible);
+        modal.setAttribute('aria-hidden', String(!visible));
+        this.input.locked = this.modalOpen || this.infoOpen;
+        if (visible) {
+            this.lastFocus = document.activeElement;
+            focusEl?.focus({ preventScroll: true });
+        } else {
+            this.lastFocus?.focus?.({ preventScroll: true });
+        }
+    }
+
+    openInfo() {
+        if (this.infoOpen || !this.infoModal) return;
+        this.infoOpen = true;
+        this.setModalVisible(this.infoModal, true, this.infoClose);
+        this.audio.tick(2000);
+    }
+
+    closeInfo() {
+        if (!this.infoOpen) return;
+        this.infoOpen = false;
+        this.setModalVisible(this.infoModal, false);
+        this.audio.tick(1400);
     }
 
     initCursorEvents() {
@@ -286,7 +304,8 @@ export class UI {
         // Tags
         this.modalTags.innerHTML = project.tags.map(t => `<span class="tech-tag">${t}</span>`).join('');
 
-        this.modal.classList.add('active');
+        this.setModalVisible(this.modal, true, this.modalClose);
+        this.modal.querySelector('.modal-container').scrollTop = 0;
         this.setCursorState('close');
         this.audio.modalOpen();
     }
@@ -294,7 +313,8 @@ export class UI {
     closeCaseStudy() {
         if (!this.modalOpen) return;
         this.modalOpen = false;
-        this.modal.classList.remove('active');
+        this.setModalVisible(this.modal, false);
+        document.documentElement.style.setProperty('--accent', this.projects[this.current].accent);
         this.setCursorState('drag');
         this.audio.modalClose();
     }

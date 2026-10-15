@@ -19,6 +19,7 @@ export class Input {
             speed: 0,
             down: false,
             moved: false,
+            type: 'mouse',
             isDragging: false
         };
 
@@ -26,7 +27,8 @@ export class Input {
         this.scroll = {
             target: 0,
             current: 0,
-            velocity: 0,       // Instantaneous velocity (sections per second or frame)
+            velocity: 0,       // Momentum, in sections per 60Hz frame
+            speed: 0,          // Visual speed of `current`, in sections per second
             dragVelocity: 0,
             unwrapped: 0
         };
@@ -41,6 +43,8 @@ export class Input {
             history: []        // Recent pointer samples for smooth release velocity
         };
 
+        this.enabled = false;  // Set once the splash screen is dismissed
+        this.locked = false;   // Set while a modal is open
         this.clickHandler = null;
         this.sectionChangeListeners = [];
         this.lastSectionIndex = 0;
@@ -59,6 +63,7 @@ export class Input {
             this.pointer.x = sx / window.innerWidth;
             this.pointer.y = sy / window.innerHeight;
             this.pointer.moved = true;
+            this.pointer.type = e.pointerType;
 
             if (this.pointer.down) {
                 const totalDx = sx - this.drag.startX;
@@ -88,7 +93,8 @@ export class Input {
         window.addEventListener('pointermove', onPointerMove, { passive: true });
 
         window.addEventListener('pointerdown', (e) => {
-            if (e.target.closest?.('.gui, .modal, button, a, nav, header')) return;
+            if (!this.enabled) return;
+            if (e.target.closest?.('.gui, .modal, .enter, button, a, nav, header')) return;
             this.pointer.down = true;
             this.pointer.isDragging = false;
             this.drag.startX = e.clientX;
@@ -121,9 +127,16 @@ export class Input {
             setTimeout(() => { this.pointer.isDragging = false; }, 30);
         });
 
+        // Touch scrolls can be cancelled by the browser mid-gesture
+        window.addEventListener('pointercancel', () => {
+            this.pointer.down = false;
+            this.pointer.isDragging = false;
+        });
+
         window.addEventListener('wheel', (e) => {
-            if (e.target.closest?.('.gui, .modal-body')) return;
+            if (e.target.closest?.('.gui, .modal')) return;
             e.preventDefault();
+            if (!this.enabled) return;
             const scale = e.deltaMode === 1 ? 28 : e.deltaMode === 2 ? window.innerHeight : 1;
             const wheelFactor = (this.params.wheelSpeed || 0.0016) * 0.45;
             const delta = (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * scale;
@@ -131,36 +144,18 @@ export class Input {
             this.scroll.velocity = clamp(this.scroll.velocity, -0.7, 0.7);
         }, { passive: false });
 
-        // Touch gestures
-        let touchStartX = 0;
-        let touchLastX = 0;
-        el.addEventListener('touchstart', (e) => {
-            if (e.touches.length > 0) {
-                touchStartX = touchLastX = e.touches[0].clientX;
-                this.scroll.velocity = 0;
-            }
-        }, { passive: true });
-
-        el.addEventListener('touchmove', (e) => {
-            if (e.touches.length > 0) {
-                const tx = e.touches[0].clientX;
-                const d = tx - touchLastX;
-                const dragSpeed = this.params.dragSpeed || 0.0034;
-                this.scroll.target -= d * dragSpeed * 1.5;
-                this.scroll.velocity = -d * dragSpeed * 0.2;
-                touchLastX = tx;
-            }
-        }, { passive: true });
+        // Touch drags arrive through the pointer events above (#gl has touch-action: none)
 
         // Keyboard navigation
         window.addEventListener('keydown', (e) => {
+            if (!this.enabled || this.locked) return;
             if (e.target.closest?.('input, textarea, .gui')) return;
             if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'd') {
                 e.preventDefault();
-                this.goTo(Math.round(this.scroll.target) + 1);
+                this.step(1);
             } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'a') {
                 e.preventDefault();
-                this.goTo(Math.round(this.scroll.target) - 1);
+                this.step(-1);
             } else if (e.key === 'Home') {
                 this.goTo(0);
             } else if (e.key === 'End') {
@@ -173,8 +168,16 @@ export class Input {
         this.clickHandler = fn;
     }
 
+    // Moves to a project index along the shortest path around the looping ribbon
     goTo(index) {
-        this.scroll.target = index;
+        const N = this.sections;
+        const from = Math.round(this.scroll.target);
+        const diff = index - (((from % N) + N) % N);
+        this.step(((diff % N) + N * 1.5) % N - N * 0.5);
+    }
+
+    step(count) {
+        this.scroll.target = Math.round(this.scroll.target) + count;
         this.scroll.velocity = 0;
     }
 
@@ -210,12 +213,19 @@ export class Input {
             }
         }
 
+        // Recover from any non-finite state rather than freezing the render loop
+        if (!Number.isFinite(s.target) || !Number.isFinite(s.velocity)) {
+            s.target = Number.isFinite(s.current) ? Math.round(s.current) : 0;
+            s.velocity = 0;
+        }
+
         // Smooth camera/ribbon position follow
         const prevCurrent = s.current;
         s.current = damp(s.current, s.target, 14, dt);
-        
-        // Signed movement velocity
-        s.velocity = (s.current - prevCurrent) / Math.max(dt, 1e-3);
+
+        // Signed visual speed (sections per second). Kept separate from the
+        // momentum velocity above so it never feeds back into the target.
+        s.speed = (s.current - prevCurrent) / Math.max(dt, 1e-3);
 
         // Notify section change if active index changed
         const activeIdx = ((Math.round(s.current) % this.sections) + this.sections) % this.sections;

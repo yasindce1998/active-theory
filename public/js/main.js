@@ -4,7 +4,7 @@
 
 import { createContext, createProgram, createTexture, pass, bindTarget, FULLSCREEN_VS } from './gl.js';
 import { perspective, lookAt, damp, lerp, clamp, hslToRgb, hexToRgb } from './math.js';
-import { Cards } from './cards.js';
+import { Cards, CARD_W } from './cards.js';
 import { Particles } from './particles.js';
 import { Post } from './post.js';
 import { Fluid } from './fluid.js';
@@ -139,11 +139,13 @@ function start() {
     const intro = { started: false, t: 0, duration: reduceMotion ? 0.4 : 2.8 };
     ui.onEnter = (withSound) => {
         intro.started = true;
+        input.enabled = true;
         if (withSound) audio.start();
     };
 
     // Click on canvas triggers card selection / case study modal
     input.onClick(() => {
+        if (ui.modalOpen) return;
         const hit = cards.hitTest(input.pointer, camera, aspect);
         if (hit) {
             cards.triggerClick(hit.cardIndex, hit.uv);
@@ -176,7 +178,7 @@ function start() {
         // Update physics
         input.update(dt);
         const activeIdx = input.activeIndex;
-        const activeProj = PROJECTS[activeIdx];
+        const activeProj = PROJECTS[activeIdx] || PROJECTS[0];
         const accentCol = hexToRgb(activeProj.accent);
 
         // Trigger section UI and audio updates
@@ -188,13 +190,15 @@ function start() {
 
         // Mechanical tick sound when passing card boundaries
         const currentInt = Math.floor(input.scroll.current + 0.5);
-        if (currentInt !== lastScrollInt && Math.abs(input.scroll.velocity) > 0.04) {
+        if (currentInt !== lastScrollInt && Math.abs(input.scroll.speed) > 0.04) {
             lastScrollInt = currentInt;
-            audio.tick(1600 + (Math.abs(input.scroll.velocity) * 800));
+            audio.tick(1600 + (Math.abs(input.scroll.speed) * 800));
         }
 
         // Raycast hit test for mouse hover on 3D cards
-        const hit = cards.hitTest(input.pointer, camera, aspect);
+        // Touch has no hover: only track it while a finger is down
+        const canHover = ui.entered && !ui.modalOpen && (input.pointer.type !== 'touch' || input.pointer.down);
+        const hit = canHover ? cards.hitTest(input.pointer, camera, aspect) : null;
         if (hit) {
             cards.hoveredIndex = hit.cardIndex;
             cards.hoveredUv = hit.uv;
@@ -209,11 +213,14 @@ function start() {
         const p = input.pointer;
         const introZ = (1 - introE) * 24;
         
-        // Base camera sits looking at center of the active arc
+        // Base camera sits looking at center of the active arc, pulled back on
+        // narrow/portrait screens so the active card still fits the width
+        const fov = isMobile && aspect < 1 ? params.fov * 1.25 : params.fov;
+        const fitZ = (CARD_W * 0.5 / 0.88) / (Math.tan(fov * Math.PI / 360) * aspect);
         const desiredCam = [
             (p.x - 0.5) * 1.2 * sway,
             (p.y - 0.5) * -0.6 * sway,
-            7.8 + introZ
+            Math.max(7.8, fitZ) + introZ
         ];
         const followSpeed = intro.t < 1 ? 16 : 3.0;
         for (let i = 0; i < 3; i++) {
@@ -224,7 +231,6 @@ function start() {
         // Camera view & projection
         const up = [0, 1, 0];
         lookAt(camera.view, camera.pos, camera.target, up);
-        const fov = isMobile && aspect < 1 ? params.fov * 1.25 : params.fov;
         perspective(camera.proj, fov * Math.PI / 180, aspect, 0.1, 100);
 
         const v = camera.view;
@@ -234,12 +240,16 @@ function start() {
 
         // Fluid simulation step
         if (p.moved && (Math.abs(p.dx) + Math.abs(p.dy) > 1e-5)) {
-            fluid.splat([p.x, 1 - p.y], [p.dx, -p.dy], accentCol.map(c => c * 0.1));
+            // Normalise to a 60Hz frame so splat strength doesn't depend on frame rate
+            const k = 1 / Math.max(dt * 60, 1);
+            fluid.splat([p.x, 1 - p.y], [p.dx * k, -p.dy * k], accentCol.map(c => c * 0.1));
         }
         fluid.step(dt);
 
         // Update 3D Cards
-        cards.update(dt, time, input.scroll.current, input.scroll.velocity, input.pointer, params);
+        // Cap visual speed so fast flings tilt/smear the cards without blowing them apart
+        const cardSpeed = clamp(input.scroll.speed, -2.5, 2.5);
+        cards.update(dt, time, input.scroll.current, cardSpeed, input.pointer, params);
 
         // Update ambient dust particles drifting in 3D around the ribbon
         particles.update(dt, time, {
@@ -268,7 +278,7 @@ function start() {
         });
 
         // 2. Draw 3D Cards Ribbon
-        cards.draw(camera, input.scroll.velocity, time, params);
+        cards.draw(camera, cardSpeed, time, params);
 
         // 3. Draw ambient atmospheric particles around cards
         const dustIntensity = (params.dustIntensity || 0.75) * 0.05 * introE;
@@ -291,8 +301,8 @@ function start() {
         });
 
         // Audio & UI updates
-        audio.update(input.scroll.velocity, p.speed);
-        ui.update(dt, input.scroll.velocity);
+        audio.update(input.scroll.speed, p.speed);
+        ui.update(dt, input.scroll.speed);
 
         p.moved = p.moved && p.speed > 0.001;
     }

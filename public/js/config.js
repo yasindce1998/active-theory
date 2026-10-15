@@ -157,7 +157,18 @@ export const PARAMS = {
     // Environment & Camera
     dustIntensity: 0.75,
     cameraSway: 0.8,
-    fov: 42
+    fov: 42,
+
+    // Pointer fluid simulation (drives post-process distortion)
+    simRes: 128,
+    dyeRes: 512,
+    splatRadius: 0.25,
+    splatForce: 3000,
+    curl: 20,
+    pressureIterations: 20,
+    pressureDecay: 0.8,
+    velocityDissipation: 0.6,
+    dyeDissipation: 1.2
 };
 
 export const SCHEMA = {

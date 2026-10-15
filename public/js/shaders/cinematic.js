@@ -115,7 +115,11 @@ void main() {
     vec2 uv = 0.5 + cc * (1.0 + uBarrel * r2) / (1.0 + uBarrel * 0.25);
 
     vec2 vel = texture(uVelocity, uv).xy;
-    uv -= vel * uDistortion * 0.0005;
+    // Cap the displacement so a violent swipe ripples the frame instead of tearing it
+    vec2 disp = vel * uDistortion * 0.0005;
+    float dispLen = length(disp);
+    if (dispLen > 0.025) disp *= 0.025 / dispLen;
+    uv -= disp;
 
     vec2 dir = uv - 0.5;
     float strength = uAberration * (dot(dir, dir) * 2.0 + length(vel) * 0.002) + uWarp * 0.02;

@@ -91,7 +91,7 @@ void main() {
     vec2 totalDisp = pDisp + rDisp + vec2(vWave, 0.0);
     
     // 4. Chromatic aberration sampling
-    float split = uAberration * (0.6 + abs(uVelocity) * 2.5 + uHover * 0.8 + rBand * 1.5);
+    float split = min(uAberration * (0.6 + abs(uVelocity) * 2.5 + uHover * 0.8 + rBand * 1.5), 0.03);
     vec2 splitDir = normalize(totalDisp + vec2(0.8, 0.2));
     if (length(totalDisp) < 1e-4) splitDir = vec2(1.0, 0.0);
     

@@ -2,7 +2,7 @@
 // Values persist to localStorage and can be exported/imported as JSON presets,
 // so look-dev tweaks don't require code changes.
 
-const STORAGE_KEY = 'lumen.params.v3';
+const STORAGE_KEY = 'activetheory.params.v1';
 
 export class Gui {
     constructor(params, schema) {
@@ -37,7 +37,7 @@ export class Gui {
 
         for (const [group, fields] of Object.entries(this.schema)) {
             const details = document.createElement('details');
-            details.open = group === 'Lens';
+            details.open = group === Object.keys(this.schema)[0];
             const summary = document.createElement('summary');
             summary.textContent = group;
             details.appendChild(summary);

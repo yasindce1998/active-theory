@@ -111,6 +111,7 @@ html:not(.entered), html:not(.entered) *,
 }
 
 .counter-badge {
+    white-space: nowrap;
     font-family: var(--mono);
     font-size: 11px;
     letter-spacing: 0.18em;
@@ -123,6 +124,7 @@ html:not(.entered), html:not(.entered) *,
 }
 
 .pill {
+    white-space: nowrap;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -384,7 +386,8 @@ html:not(.entered), html:not(.entered) *,
     justify-content: center;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.5s var(--ease), visibility 0.5s;
+    /* Hide only after the fade-out; become visible/clickable immediately on open */
+    transition: opacity 0.5s var(--ease), visibility 0s linear 0.5s;
     pointer-events: none;
 }
 
@@ -392,6 +395,7 @@ html:not(.entered), html:not(.entered) *,
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
+    transition: opacity 0.5s var(--ease), visibility 0s;
 }
 
 .modal-backdrop {
@@ -635,4 +639,15 @@ html:not(.entered), html:not(.entered) *,
     .bottom-bar { padding: 0 16px; }
     .filter-tabs { display: none; }
     .hint-drag { display: none; }
+}
+
+@media (max-width: 600px) {
+    .top { height: 60px; }
+    .brand-sub, #gui-toggle, .counter-badge { display: none; }
+    .logo { letter-spacing: 0.24em; white-space: nowrap; }
+    .header-right { gap: 8px; }
+    .header-right .pill { height: 30px; padding: 0 12px; font-size: 10px; }
+    #content { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+    .bottom-bar { justify-content: center; padding-bottom: env(safe-area-inset-bottom); height: calc(64px + env(safe-area-inset-bottom)); }
+    .modal-container { max-height: 90vh; max-height: 90dvh; }
 }

@@ -1,0 +1,4 @@
+# Local dev server only; Vercel serves ./public as static files
+server.js
+start.sh
+start.bat

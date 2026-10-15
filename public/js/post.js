@@ -119,9 +119,13 @@ export class Post {
         }
         const streakTex = src.tex;
 
-        pass(gl, vao, p.rays, this.rays, {
-            uSource: mips[1].tex, uCenter: u.lightPos || [0.5, 0.5], uDensity: 0.8, uDecay: 0.95
-        });
+        // 48-tap radial blur: skip it entirely when it wouldn't contribute
+        const raysOn = (u.raysStrength ?? 0) > 0 || (u.lensDirt ?? 0) > 0;
+        if (raysOn) {
+            pass(gl, vao, p.rays, this.rays, {
+                uSource: mips[1].tex, uCenter: u.lightPos || [0.5, 0.5], uDensity: 0.8, uDecay: 0.95
+            });
+        }
 
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.ONE, gl.ONE);
