@@ -1,15 +1,16 @@
-// Generative soundscape built entirely with Web Audio (no audio files).
-// - Detuned pad chord through a lowpass filter that opens with scroll speed
-// - Filtered noise "wind" that swells with pointer velocity
-// - Short pitched blips for UI hovers and section changes
-// Browsers require a user gesture before audio can start, so call start() from a click.
+// Generative Soundscape & Tactile Audio System for Active Theory
+// Features synthesized mechanical ticks, magnetic latch snaps,
+// velocity whooshes, modal transitions, and ambient spatial harmonic drones.
 
 const CHORDS = [
-    [38, 45, 52, 57],
-    [36, 43, 51, 58],
-    [41, 48, 55, 60],
-    [34, 41, 50, 57]
+    [38, 45, 52, 57], // D minor 9
+    [36, 43, 51, 58], // C minor 9
+    [41, 48, 55, 60], // F major 9
+    [34, 41, 50, 57], // Bb major 9
+    [39, 46, 53, 58], // Eb major 7
+    [37, 44, 52, 59]  // C# minor 9
 ];
+
 const PENTATONIC = [0, 2, 4, 7, 9, 12, 14, 16];
 const midiToHz = (m) => 440 * Math.pow(2, (m - 69) / 12);
 
@@ -18,6 +19,7 @@ export class Soundscape {
         this.ctx = null;
         this.enabled = false;
         this.chordIndex = 0;
+        this.lastTickTime = 0;
     }
 
     start() {
@@ -35,15 +37,15 @@ export class Soundscape {
         const comp = ctx.createDynamicsCompressor();
         this.master.connect(comp).connect(ctx.destination);
 
-        this.reverb = this.createReverb(5.5);
+        this.reverb = this.createReverb(4.5);
         const wet = ctx.createGain();
-        wet.gain.value = 0.55;
+        wet.gain.value = 0.45;
         this.reverb.connect(wet).connect(this.master);
 
         this.filter = ctx.createBiquadFilter();
         this.filter.type = 'lowpass';
-        this.filter.frequency.value = 400;
-        this.filter.Q.value = 4;
+        this.filter.frequency.value = 450;
+        this.filter.Q.value = 3.5;
         const padGain = ctx.createGain();
         padGain.gain.value = 0.12;
         this.filter.connect(padGain);
@@ -51,7 +53,7 @@ export class Soundscape {
         padGain.connect(this.reverb);
 
         this.voices = CHORDS[this.chordIndex % CHORDS.length].map((note, i) => {
-            const oscs = [-7, 7].map((detune) => {
+            const oscs = [-6, 6].map((detune) => {
                 const o = ctx.createOscillator();
                 o.type = i % 2 ? 'sawtooth' : 'triangle';
                 o.frequency.value = midiToHz(note);
@@ -63,29 +65,30 @@ export class Soundscape {
             return oscs;
         });
 
-        // Slow LFO on filter cutoff so the pad breathes even when idle
+        // Breathing LFO on filter cutoff
         const lfo = ctx.createOscillator();
         const lfoGain = ctx.createGain();
-        lfo.frequency.value = 0.07;
-        lfoGain.gain.value = 180;
+        lfo.frequency.value = 0.08;
+        lfoGain.gain.value = 160;
         lfo.connect(lfoGain).connect(this.filter.frequency);
         lfo.start();
 
+        // Atmospheric noise bed
         this.wind = this.createNoise();
         this.windFilter = ctx.createBiquadFilter();
         this.windFilter.type = 'bandpass';
-        this.windFilter.frequency.value = 800;
-        this.windFilter.Q.value = 0.8;
+        this.windFilter.frequency.value = 900;
+        this.windFilter.Q.value = 1.0;
         this.windGain = ctx.createGain();
         this.windGain.gain.value = 0;
         this.wind.connect(this.windFilter).connect(this.windGain);
         this.windGain.connect(this.master);
         this.windGain.connect(this.reverb);
 
-        // Sub-bass drone with slow beating between two detuned sines
+        // Sub drone
         this.sub = ctx.createGain();
-        this.sub.gain.value = 0.22;
-        [36, 36.12].forEach((m) => {
+        this.sub.gain.value = 0.18;
+        [36, 36.1].forEach((m) => {
             const o = ctx.createOscillator();
             o.type = 'sine';
             o.frequency.value = midiToHz(m);
@@ -96,55 +99,6 @@ export class Soundscape {
 
         this.setMuted(false);
         this.boot();
-    }
-
-    // Rising filtered noise + pitch sweep, used for the intro and section transitions
-    whoosh(duration = 1.2, gain = 0.35) {
-        if (!this.ctx || !this.enabled) return;
-        const ctx = this.ctx;
-        const t = ctx.currentTime;
-        const src = ctx.createBufferSource();
-        src.buffer = this.noiseBuffer;
-        const f = ctx.createBiquadFilter();
-        f.type = 'bandpass';
-        f.Q.value = 2;
-        f.frequency.setValueAtTime(200, t);
-        f.frequency.exponentialRampToValueAtTime(4000, t + duration * 0.8);
-        f.frequency.exponentialRampToValueAtTime(800, t + duration);
-        const g = ctx.createGain();
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(gain, t + duration * 0.75);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + duration);
-        src.connect(f).connect(g);
-        g.connect(this.master);
-        g.connect(this.reverb);
-        src.start(t);
-        src.stop(t + duration + 0.05);
-    }
-
-    // Low "boom" with a pitch drop, for arriving at a section
-    impact(gain = 0.5) {
-        if (!this.ctx || !this.enabled) return;
-        const ctx = this.ctx;
-        const t = ctx.currentTime;
-        const o = ctx.createOscillator();
-        o.type = 'sine';
-        o.frequency.setValueAtTime(110, t);
-        o.frequency.exponentialRampToValueAtTime(32, t + 0.9);
-        const g = ctx.createGain();
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(gain, t + 0.02);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
-        o.connect(g);
-        g.connect(this.master);
-        g.connect(this.reverb);
-        o.start(t);
-        o.stop(t + 1.7);
-    }
-
-    boot() {
-        this.whoosh(2.4, 0.3);
-        setTimeout(() => this.impact(0.6), 2100);
     }
 
     createNoise() {
@@ -160,14 +114,13 @@ export class Soundscape {
         return src;
     }
 
-    // Synthetic impulse response: exponentially decaying stereo noise
     createReverb(seconds) {
         const ctx = this.ctx;
         const len = Math.floor(ctx.sampleRate * seconds);
         const ir = ctx.createBuffer(2, len, ctx.sampleRate);
         for (let ch = 0; ch < 2; ch++) {
             const d = ir.getChannelData(ch);
-            for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+            for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.5);
         }
         const conv = ctx.createConvolver();
         conv.buffer = ir;
@@ -179,7 +132,7 @@ export class Soundscape {
         if (!this.ctx) return;
         const t = this.ctx.currentTime;
         this.master.gain.cancelScheduledValues(t);
-        this.master.gain.setTargetAtTime(muted ? 0 : 0.8, t, 0.4);
+        this.master.gain.setTargetAtTime(muted ? 0 : 0.75, t, 0.3);
     }
 
     toggle() {
@@ -191,13 +144,124 @@ export class Soundscape {
         return this.enabled;
     }
 
-    // Called every frame with normalized speeds (0..~1)
+    // Crisp mechanical tick for ribbon scrolling / card pass-by
+    tick(freq = 1800) {
+        if (!this.ctx || !this.enabled) return;
+        const now = performance.now();
+        if (now - this.lastTickTime < 45) return; // Debounce rapid ticks
+        this.lastTickTime = now;
+
+        const ctx = this.ctx;
+        const t = ctx.currentTime;
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        const f = ctx.createBiquadFilter();
+
+        f.type = 'bandpass';
+        f.frequency.value = freq;
+        f.Q.value = 8;
+
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(freq * 1.5, t);
+        o.frequency.exponentialRampToValueAtTime(freq * 0.5, t + 0.015);
+
+        g.gain.setValueAtTime(0.08, t);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.02);
+
+        o.connect(f).connect(g).connect(this.master);
+        o.start(t);
+        o.stop(t + 0.025);
+    }
+
+    // Magnetic latch snap sound when card centers
+    snap() {
+        if (!this.ctx || !this.enabled) return;
+        const ctx = this.ctx;
+        const t = ctx.currentTime;
+
+        // Double micro-click
+        [0, 0.03].forEach((delay, idx) => {
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = 'sine';
+            o.frequency.setValueAtTime(idx === 0 ? 980 : 1320, t + delay);
+            o.frequency.exponentialRampToValueAtTime(320, t + delay + 0.035);
+
+            g.gain.setValueAtTime(0.09, t + delay);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + delay + 0.04);
+
+            o.connect(g).connect(this.master);
+            o.start(t + delay);
+            o.stop(t + delay + 0.05);
+        });
+    }
+
+    // Whoosh for high-velocity flick
+    whoosh(duration = 0.8, gain = 0.25) {
+        if (!this.ctx || !this.enabled || !this.noiseBuffer) return;
+        const ctx = this.ctx;
+        const t = ctx.currentTime;
+        const src = ctx.createBufferSource();
+        src.buffer = this.noiseBuffer;
+        const f = ctx.createBiquadFilter();
+        f.type = 'bandpass';
+        f.Q.value = 2.5;
+        f.frequency.setValueAtTime(300, t);
+        f.frequency.exponentialRampToValueAtTime(2800, t + duration * 0.6);
+        f.frequency.exponentialRampToValueAtTime(600, t + duration);
+
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(gain, t + duration * 0.5);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+        src.connect(f).connect(g);
+        g.connect(this.master);
+        g.connect(this.reverb);
+        src.start(t);
+        src.stop(t + duration + 0.05);
+    }
+
+    // Cinematic swell when opening case study
+    modalOpen() {
+        if (!this.ctx || !this.enabled) return;
+        const ctx = this.ctx;
+        const t = ctx.currentTime;
+
+        // Low sub impact
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(140, t);
+        o.frequency.exponentialRampToValueAtTime(42, t + 0.6);
+
+        g.gain.setValueAtTime(0.28, t);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+
+        o.connect(g).connect(this.master);
+        o.start(t);
+        o.stop(t + 0.75);
+
+        // Shimmer
+        this.blip(88, 0.06);
+    }
+
+    modalClose() {
+        if (!this.ctx || !this.enabled) return;
+        this.blip(74, 0.04);
+    }
+
+    boot() {
+        this.whoosh(1.6, 0.2);
+    }
+
     update(scrollSpeed, pointerSpeed) {
         if (!this.ctx || !this.enabled) return;
         const t = this.ctx.currentTime;
-        this.filter.frequency.setTargetAtTime(350 + Math.min(scrollSpeed, 1) * 3200, t, 0.15);
-        this.windGain.gain.setTargetAtTime(Math.min(pointerSpeed, 1) * 0.25, t, 0.1);
-        this.windFilter.frequency.setTargetAtTime(500 + Math.min(pointerSpeed, 1) * 2500, t, 0.1);
+        const spd = Math.abs(scrollSpeed);
+        this.filter.frequency.setTargetAtTime(450 + Math.min(spd * 2.0, 1) * 2400, t, 0.15);
+        this.windGain.gain.setTargetAtTime(Math.min(pointerSpeed + spd * 0.4, 1) * 0.18, t, 0.1);
+        this.windFilter.frequency.setTargetAtTime(600 + Math.min(pointerSpeed * 1.5, 1) * 2000, t, 0.1);
     }
 
     setSection(index) {
@@ -207,13 +271,12 @@ export class Soundscape {
         const chord = CHORDS[index % CHORDS.length];
         const t = this.ctx.currentTime;
         this.voices.forEach((oscs, i) => {
-            oscs.forEach((o) => o.frequency.setTargetAtTime(midiToHz(chord[i]), t, 0.6));
+            oscs.forEach((o) => o.frequency.setTargetAtTime(midiToHz(chord[i]), t, 0.5));
         });
-        this.whoosh(0.9, 0.22);
-        setTimeout(() => this.impact(0.35), 750);
+        this.snap();
     }
 
-    blip(midi = 76 + PENTATONIC[Math.floor(Math.random() * PENTATONIC.length)], gain = 0.05) {
+    blip(midi = 76 + PENTATONIC[Math.floor(Math.random() * PENTATONIC.length)], gain = 0.04) {
         if (!this.ctx || !this.enabled) return;
         const ctx = this.ctx;
         const t = ctx.currentTime;
@@ -223,11 +286,11 @@ export class Soundscape {
         o.frequency.value = midiToHz(midi);
         g.gain.setValueAtTime(0, t);
         g.gain.linearRampToValueAtTime(gain, t + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
         o.connect(g);
         g.connect(this.master);
         g.connect(this.reverb);
         o.start(t);
-        o.stop(t + 0.65);
+        o.stop(t + 0.45);
     }
 }

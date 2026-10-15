@@ -120,7 +120,7 @@ export class Post {
         const streakTex = src.tex;
 
         pass(gl, vao, p.rays, this.rays, {
-            uSource: mips[1].tex, uCenter: u.lightPos, uDensity: 0.8, uDecay: 0.95
+            uSource: mips[1].tex, uCenter: u.lightPos || [0.5, 0.5], uDensity: 0.8, uDecay: 0.95
         });
 
         gl.enable(gl.BLEND);
@@ -135,27 +135,27 @@ export class Post {
             uBloom: mips[0].tex,
             uStreak: streakTex,
             uRays: this.rays.tex,
-            uVelocity: fluid.velocityTexture,
-            uDye: fluid.dyeTexture,
-            uBloomStrength: u.bloomStrength,
-            uStreakStrength: u.streakStrength,
-            uStreakTint: u.streakTint,
-            uRaysStrength: u.raysStrength,
-            uDirt: u.lensDirt,
-            uDistortion: u.distortion,
-            uBarrel: u.barrel,
-            uAberration: u.aberration,
-            uWarp: u.warp,
-            uDyeAmount: u.dyeAmount,
-            uGrain: u.grain,
-            uVignette: u.vignette,
-            uExposure: u.exposure,
-            uScanlines: u.scanlines,
-            uGrade: u.grade,
-            uTime: u.time,
+            uVelocity: fluid?.velocityTexture || fluid?.velocity?.read?.tex || this.scene.tex,
+            uDye: fluid?.dyeTexture || fluid?.dye?.read?.tex || this.scene.tex,
+            uBloomStrength: u.bloomStrength ?? 0.5,
+            uStreakStrength: u.streakStrength ?? 0.15,
+            uStreakTint: u.streakTint || [1, 1, 1],
+            uRaysStrength: u.raysStrength ?? 0.0,
+            uDirt: u.lensDirt ?? 0.0,
+            uDistortion: u.distortion ?? u.liquidDistortion ?? 1.0,
+            uBarrel: u.barrel ?? 0.0,
+            uAberration: u.aberration ?? u.chromaticAberration ?? 0.025,
+            uWarp: u.warp ?? 0.0,
+            uDyeAmount: u.dyeAmount ?? 0.0,
+            uGrain: u.grain ?? 0.045,
+            uVignette: u.vignette ?? 0.85,
+            uExposure: u.exposure ?? 0.95,
+            uScanlines: u.scanlines ?? 0.0,
+            uGrade: u.grade ?? 0.0,
+            uTime: u.time ?? 0.0,
             uResolution: [this.w, this.h],
-            uFlash: u.flash,
-            uFade: u.fade
+            uFlash: u.flash ?? 0.0,
+            uFade: u.fade ?? 1.0
         });
     }
 }

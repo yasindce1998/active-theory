@@ -1,12 +1,12 @@
-// DOM overlay: enter screen, letterbox, HUD telemetry, target reticle,
-// scramble-decode text reveals, nav, sound toggle and custom cursor.
+// Active Theory Minimalist Editorial UI, Dynamic Cursor & Case Study Modal
+
 import { damp } from './math.js';
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const GLYPHS = '01<>/\\[]{}#%&*+=-_ABCDEFGHJKLMNPRSTUVWXYZ';
 
-// Reveals text by cycling random glyphs that settle left-to-right into the final string
-function decode(el, text, { duration = 900, delay = 0 } = {}) {
+function decode(el, text, { duration = 800, delay = 0 } = {}) {
+    if (!el) return;
     if (el._decodeRaf) cancelAnimationFrame(el._decodeRaf);
     if (reduceMotion) {
         el.textContent = text;
@@ -32,178 +32,314 @@ function decode(el, text, { duration = 900, delay = 0 } = {}) {
 
 const pad = (n, l = 2) => String(Math.floor(n)).padStart(l, '0');
 
-function timecode(seconds) {
-    const fps = 24;
-    const total = Math.floor(seconds * fps);
-    const f = total % fps;
-    const s = Math.floor(total / fps);
-    return `${pad(s / 3600)}:${pad((s / 60) % 60)}:${pad(s % 60)}:${pad(f)}`;
-}
-
 export class UI {
-    constructor(sections, input, audio, gui) {
-        this.sections = sections;
+    constructor(projects, input, audio, gui) {
+        this.projects = projects;
         this.input = input;
         this.audio = audio;
-        this.current = -1;
+        this.gui = gui;
+
+        this.current = 0;
         this.onEnter = null;
         this.entered = false;
-        this.content = document.getElementById('content');
-        this.nav = document.getElementById('nav');
-        this.progress = document.getElementById('progress');
-        this.soundBtn = document.getElementById('sound');
+        this.modalOpen = false;
+
+        // DOM elements
         this.cursor = document.getElementById('cursor');
-        this.reticle = document.getElementById('reticle');
-        this.hud = {
-            tc: document.getElementById('hud-tc'),
-            seq: document.getElementById('hud-seq'),
-            cam: document.getElementById('hud-cam'),
-            fov: document.getElementById('hud-fov'),
-            focus: document.getElementById('hud-focus'),
-            warp: document.getElementById('hud-warp'),
-            fps: document.getElementById('hud-fps'),
-            range: document.getElementById('reticle-range')
+        this.cursorLabel = document.getElementById('cursor-label');
+        this.counterBadge = document.getElementById('project-counter');
+        this.telemetryTime = document.getElementById('telemetry-time');
+        this.soundBtn = document.getElementById('sound');
+        this.infoBtn = document.getElementById('info-toggle');
+        this.guiBtn = document.getElementById('gui-toggle');
+
+        this.projectCategory = document.getElementById('project-category');
+        this.projectTitle = document.getElementById('project-title');
+        this.projectSubtitle = document.getElementById('project-subtitle');
+        this.btnViewProject = document.getElementById('btn-view-project');
+
+        this.pagination = document.getElementById('project-pagination');
+        this.filterTabs = document.getElementById('filter-tabs');
+
+        // Case study modal elements
+        this.modal = document.getElementById('case-study-modal');
+        this.modalBackdrop = document.getElementById('modal-backdrop');
+        this.modalClose = document.getElementById('modal-close');
+        this.modalMeta = document.getElementById('modal-meta');
+        this.modalTitle = document.getElementById('modal-title');
+        this.modalTagline = document.getElementById('modal-tagline');
+        this.modalHeroGlow = document.getElementById('modal-hero-glow');
+        this.modalDesc = document.getElementById('modal-desc');
+        this.modalAwards = document.getElementById('modal-awards');
+        this.modalClient = document.getElementById('modal-client');
+        this.modalYear = document.getElementById('modal-year');
+        this.modalTags = document.getElementById('modal-tags');
+
+        // Info modal
+        this.infoModal = document.getElementById('info-modal');
+        this.infoBackdrop = document.getElementById('info-backdrop');
+        this.infoClose = document.getElementById('info-close');
+
+        // Cursor smoothing
+        this.cursorPos = {
+            x: window.innerWidth / 2,
+            y: window.innerHeight / 2,
+            tx: window.innerWidth / 2,
+            ty: window.innerHeight / 2,
+            state: 'drag' // 'drag' | 'view' | 'close' | 'hidden'
         };
-        this.bars = document.querySelectorAll('.bar');
-        this.cursorPos = { x: innerWidth / 2, y: innerHeight / 2, tx: innerWidth / 2, ty: innerHeight / 2 };
-        this.reticlePos = { x: innerWidth / 2, y: innerHeight / 2 };
-        this.hudTimer = 0;
 
-        this.panels = sections.map((s, i) => {
-            const el = document.createElement('section');
-            el.className = 'panel';
-            el.id = s.id;
-            el.setAttribute('aria-hidden', 'true');
-            const lines = s.title.split('<br>').map((l, j) =>
-                `<span class="line"><span style="--i:${j}">${l}</span></span>`).join('');
-            el.innerHTML = `<p class="eyebrow" data-text="${s.code}">${s.code}</p>
-                <h1>${lines}</h1>
-                <p class="body"><span class="line"><span style="--i:${s.title.split('<br>').length}">${s.body}</span></span></p>`;
-            this.content.appendChild(el);
+        if (this.cursor) {
+            this.cursor.style.transform = `translate(${this.cursorPos.x}px, ${this.cursorPos.y}px) translate(-50%, -50%)`;
+        }
 
-            const link = document.createElement('a');
-            link.href = `#${s.id}`;
-            link.innerHTML = `<i>${pad(i + 1)}</i>${s.id}`;
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                input.goTo(i);
-                audio.blip();
-            });
-            link.addEventListener('mouseenter', () => audio.blip(undefined, 0.02));
-            this.nav.appendChild(link);
-            return el;
-        });
+        this.initEnter();
+        this.initClocks();
+        this.initPagination();
+        this.initFilters();
+        this.initModals();
+        this.initCursorEvents();
+        this.updateProjectUI(0);
+    }
 
-        this.soundBtn.addEventListener('click', () => this.setSound(this.audio.toggle()));
-        document.getElementById('gui-toggle').addEventListener('click', () => gui.toggle());
-
+    initEnter() {
         const enter = document.getElementById('enter');
         const go = (withSound) => {
             if (this.entered) return;
             this.entered = true;
             document.documentElement.classList.add('entered');
-            // The button vanishes under the pointer without firing pointerleave
-            this.cursor.classList.remove('hover');
+            this.cursor?.classList.remove('button-hover');
+            this.cursor?.classList.add('visible');
             this.onEnter?.(withSound);
             if (withSound) this.setSound(true);
-            setTimeout(() => this.setSection(this.current, true), reduceMotion ? 0 : 1800);
+            setTimeout(() => this.updateProjectUI(this.current, true), reduceMotion ? 0 : 800);
         };
+
         document.getElementById('enter-sound').addEventListener('click', () => go(true));
         document.getElementById('enter-silent').addEventListener('click', () => go(false));
-        enter.querySelectorAll('[data-decode]').forEach((el, i) => decode(el, el.dataset.decode, { delay: 300 + i * 250, duration: 1100 }));
 
+        enter.querySelectorAll('[data-decode]').forEach((el, i) => {
+            decode(el, el.dataset.decode, { delay: 200 + i * 220, duration: 900 });
+        });
+
+        this.soundBtn.addEventListener('click', () => this.setSound(this.audio.toggle()));
+        this.guiBtn?.addEventListener('click', () => this.gui?.toggle());
+    }
+
+    initClocks() {
+        const updateTimes = () => {
+            try {
+                const now = new Date();
+                const la = new Intl.DateTimeFormat('en-US', {
+                    timeZone: 'America/Los_Angeles',
+                    hour: '2-digit', minute: '2-digit', hour12: false
+                }).format(now);
+                const ams = new Intl.DateTimeFormat('en-US', {
+                    timeZone: 'Europe/Amsterdam',
+                    hour: '2-digit', minute: '2-digit', hour12: false
+                }).format(now);
+                if (this.telemetryTime) {
+                    this.telemetryTime.textContent = `LA ${la} // AMS ${ams}`;
+                }
+            } catch (e) {
+                // Fallback
+            }
+        };
+        updateTimes();
+        setInterval(updateTimes, 1000);
+    }
+
+    initPagination() {
+        if (!this.pagination) return;
+        this.pagination.innerHTML = '';
+        this.pagDots = this.projects.map((p, i) => {
+            const btn = document.createElement('button');
+            btn.className = `pag-dot ${i === 0 ? 'active' : ''}`;
+            btn.textContent = p.num;
+            btn.setAttribute('aria-label', `Navigate to ${p.title}`);
+            btn.addEventListener('click', () => {
+                this.input.goTo(i);
+                this.audio.tick(2200);
+            });
+            btn.addEventListener('mouseenter', () => this.audio.blip(80, 0.02));
+            this.pagination.appendChild(btn);
+            return btn;
+        });
+    }
+
+    initFilters() {
+        if (!this.filterTabs) return;
+        this.filterTabs.querySelectorAll('.tab-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                this.filterTabs.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const filter = btn.dataset.filter;
+                this.audio.tick(1600);
+
+                if (filter === 'ALL') {
+                    this.input.goTo(0);
+                } else {
+                    const idx = this.projects.findIndex(p => p.category === filter);
+                    if (idx !== -1) this.input.goTo(idx);
+                }
+            });
+        });
+    }
+
+    initModals() {
+        // Case study trigger
+        this.btnViewProject?.addEventListener('click', () => {
+            this.openCaseStudy(this.projects[this.current]);
+        });
+
+        // Close handlers
+        this.modalClose?.addEventListener('click', () => this.closeCaseStudy());
+        this.modalBackdrop?.addEventListener('click', () => this.closeCaseStudy());
+
+        // Info modal handlers
+        this.infoBtn?.addEventListener('click', () => {
+            this.infoModal.classList.add('active');
+            this.audio.tick(2000);
+        });
+        this.infoClose?.addEventListener('click', () => {
+            this.infoModal.classList.remove('active');
+            this.audio.tick(1400);
+        });
+        this.infoBackdrop?.addEventListener('click', () => {
+            this.infoModal.classList.remove('active');
+            this.audio.tick(1400);
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (this.modalOpen) this.closeCaseStudy();
+                this.infoModal?.classList.remove('active');
+            }
+        });
+    }
+
+    initCursorEvents() {
         window.addEventListener('pointermove', (e) => {
             this.cursorPos.tx = e.clientX;
             this.cursorPos.ty = e.clientY;
             this.cursor.classList.add('visible');
         }, { passive: true });
-        document.addEventListener('mouseleave', () => this.cursor.classList.remove('visible'));
-        document.querySelectorAll('[data-magnetic]').forEach((el) => this.magnetic(el));
-        this.nav.querySelectorAll('a').forEach((el) => this.magnetic(el));
 
-        const fromHash = sections.findIndex((s) => `#${s.id}` === location.hash);
-        if (fromHash > 0) input.scroll.target = input.scroll.current = fromHash;
-        this.current = Math.max(fromHash, 0);
+        document.addEventListener('mouseleave', () => this.cursor.classList.remove('visible'));
+
+        // Magnetic buttons
+        document.querySelectorAll('[data-magnetic]').forEach((el) => {
+            el.addEventListener('pointermove', (e) => {
+                if (reduceMotion) return;
+                const r = el.getBoundingClientRect();
+                const x = (e.clientX - r.left - r.width / 2) * 0.25;
+                const y = (e.clientY - r.top - r.height / 2) * 0.25;
+                el.style.transform = `translate(${x}px, ${y}px)`;
+                this.cursor.classList.add('button-hover');
+            });
+            el.addEventListener('pointerleave', () => {
+                el.style.transform = '';
+                this.cursor.classList.remove('button-hover');
+            });
+        });
+    }
+
+    setCursorState(state) {
+        if (this.cursorPos.state === state) return;
+        this.cursorPos.state = state;
+
+        this.cursor.classList.remove('view-state', 'close-state');
+
+        if (state === 'view') {
+            this.cursor.classList.add('view-state');
+            this.cursorLabel.textContent = 'VIEW';
+        } else if (state === 'close') {
+            this.cursor.classList.add('close-state');
+            this.cursorLabel.textContent = 'CLOSE';
+        } else {
+            this.cursorLabel.textContent = 'DRAG';
+        }
     }
 
     setSound(on) {
         this.soundBtn.setAttribute('aria-pressed', String(on));
-        this.soundBtn.querySelector('span').textContent = on ? 'Audio on' : 'Audio off';
+        this.soundBtn.querySelector('span').textContent = on ? 'AUDIO ON' : 'AUDIO OFF';
     }
 
-    magnetic(el) {
-        el.addEventListener('pointermove', (e) => {
-            if (reduceMotion) return;
-            const r = el.getBoundingClientRect();
-            const x = (e.clientX - r.left - r.width / 2) * 0.3;
-            const y = (e.clientY - r.top - r.height / 2) * 0.3;
-            el.style.transform = `translate(${x}px, ${y}px)`;
-            this.cursor.classList.add('hover');
-        });
-        el.addEventListener('pointerleave', () => {
-            el.style.transform = '';
-            this.cursor.classList.remove('hover');
-        });
+    openCaseStudy(project) {
+        if (!project || this.modalOpen) return;
+        this.modalOpen = true;
+
+        this.modalMeta.textContent = `[ ${project.num} // ${project.category} · ${project.year} ]`;
+        this.modalTitle.textContent = project.title;
+        this.modalTagline.textContent = project.tagline;
+        this.modalDesc.textContent = project.description;
+        this.modalAwards.textContent = project.awards;
+        this.modalClient.textContent = project.client;
+        this.modalYear.textContent = project.year;
+
+        // Accent glow
+        const accent = project.accent || '#00f2fe';
+        this.modalHeroGlow.style.background = `radial-gradient(circle at 80% 20%, ${accent}40, transparent 70%)`;
+        document.documentElement.style.setProperty('--accent', accent);
+
+        // Tags
+        this.modalTags.innerHTML = project.tags.map(t => `<span class="tech-tag">${t}</span>`).join('');
+
+        this.modal.classList.add('active');
+        this.setCursorState('close');
+        this.audio.modalOpen();
     }
 
-    setSection(index, force = false) {
+    closeCaseStudy() {
+        if (!this.modalOpen) return;
+        this.modalOpen = false;
+        this.modal.classList.remove('active');
+        this.setCursorState('drag');
+        this.audio.modalClose();
+    }
+
+    updateProjectUI(index, force = false) {
         if (index === this.current && !force) return;
         this.current = index;
-        if (!this.entered) return;
-        this.panels.forEach((p, i) => {
-            const active = i === index;
-            p.classList.toggle('active', active);
-            p.setAttribute('aria-hidden', String(!active));
-            if (active) {
-                const eb = p.querySelector('.eyebrow');
-                decode(eb, eb.dataset.text, { delay: 200, duration: 700 });
-            }
-        });
-        [...this.nav.children].forEach((a, i) => a.classList.toggle('active', i === index));
-        decode(this.hud.seq, this.sections[index].code, { duration: 600 });
-        history.replaceState(null, '', index === 0 ? location.pathname : `#${this.sections[index].id}`);
+        const p = this.projects[index];
+        if (!p) return;
+
+        // Update accent CSS variable
+        document.documentElement.style.setProperty('--accent', p.accent);
+
+        // Update counter badge
+        if (this.counterBadge) {
+            this.counterBadge.textContent = `[ ${p.num} / ${pad(this.projects.length)} ]`;
+        }
+
+        // Update active project info
+        if (this.projectCategory) {
+            this.projectCategory.textContent = `[ ${p.num} // ${p.category} ]`;
+        }
+        if (this.projectTitle) {
+            decode(this.projectTitle, p.title, { duration: 550 });
+        }
+        if (this.projectSubtitle) {
+            this.projectSubtitle.textContent = p.subtitle;
+        }
+
+        // Update pagination dots
+        this.pagDots?.forEach((dot, i) => dot.classList.toggle('active', i === index));
     }
 
     ready() {
         document.documentElement.classList.add('loaded');
     }
 
-    update(sectionFloat, dt, s) {
-        this.progress.style.transform = `scaleY(${sectionFloat / (this.sections.length - 1)})`;
-
+    update(dt, velocity) {
+        // Cursor damping
         const c = this.cursorPos;
-        c.x = damp(c.x, c.tx, 20, dt);
-        c.y = damp(c.y, c.ty, 20, dt);
-        this.cursor.style.transform = `translate(${c.x}px, ${c.y}px)`;
+        c.x = damp(c.x, c.tx, 26, dt);
+        c.y = damp(c.y, c.ty, 26, dt);
 
-        // Letterbox to 2.39:1, opened by the intro and tightened slightly during warp
-        const vw = innerWidth, vh = innerHeight;
-        const scope = Math.max(0, (vh - vw / 2.39) / 2);
-        const barH = this.entered
-            ? scope * s.letterbox * (0.85 + s.warp * 0.3)
-            : vh / 2;
-        this.bars.forEach((b) => { b.style.height = `${barH}px`; });
-        document.documentElement.style.setProperty('--bar', `${barH}px`);
-
-        // Reticle tracks the core's screen projection
-        const r = this.reticlePos;
-        const tx = s.light.x * vw, ty = (1 - s.light.y) * vh;
-        r.x = damp(r.x, tx, 6, dt);
-        r.y = damp(r.y, ty, 6, dt);
-        this.reticle.style.transform = `translate(${r.x}px, ${r.y}px) rotate(${s.time * 8}deg)`;
-        this.reticle.style.opacity = s.light.z > 0 && this.entered ? 1 : 0;
-
-        this.hud.tc.textContent = timecode(s.time);
-        this.hudTimer -= dt;
-        if (this.hudTimer <= 0) {
-            this.hudTimer = 0.1;
-            const p = s.camera.pos;
-            this.hud.cam.textContent = `${p[0].toFixed(2)} ${p[1].toFixed(2)} ${p[2].toFixed(2)}`;
-            this.hud.fov.textContent = `${s.fov.toFixed(1)}°`;
-            this.hud.focus.textContent = `${s.focus.toFixed(2)}m`;
-            this.hud.warp.textContent = `${(s.warp * 100).toFixed(0)}%`;
-            this.hud.fps.textContent = `${Math.round(s.fps)}`;
-            this.hud.range.textContent = `RNG ${s.focus.toFixed(1)}`;
-        }
+        // Dynamic slight velocity skew
+        const skew = Math.max(-25, Math.min(25, velocity * 40));
+        this.cursor.style.transform = `translate(${c.x}px, ${c.y}px) translate(-50%, -50%) skewX(${-skew * 0.4}deg)`;
     }
 }

@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#000000">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23bee6ff' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%23bee6ff'/%3E%3C/svg%3E">
-    <meta name="description" content="A cinematic real-time WebGL sci-fi experience: GPU fluids, particles, lens effects and generative sound.">
-    <title>Lumen — Signal from the deep</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#050508">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23050508'/%3E%3Cpolygon points='16,4 28,26 4,26' fill='none' stroke='%2300f2fe' stroke-width='2'/%3E%3Ccircle cx='16' cy='18' r='3' fill='%2300f2fe'/%3E%3C/svg%3E">
+    <meta name="description" content="Active Theory · Award-winning creative digital experiences, WebGL 3D production, and real-time graphics.">
+    <title>Active Theory · Creative Digital Experiences</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/cinematic.css">
     <link rel="modulepreload" href="/js/main.js">
@@ -14,66 +14,155 @@
 <body>
     <canvas id="gl" aria-hidden="true"></canvas>
 
-    <div class="bar bar-top" aria-hidden="true"></div>
-    <div class="bar bar-bottom" aria-hidden="true"></div>
-
+    <!-- Splash Enter Screen -->
     <div id="enter" class="enter" role="dialog" aria-labelledby="enter-title">
         <div class="enter-inner">
-            <p class="enter-meta" data-decode="TRANSMISSION 0x4C55 // ORIGIN UNKNOWN"></p>
-            <h1 id="enter-title" class="enter-title" data-decode="LUMEN"></h1>
-            <p class="enter-meta dim" data-decode="BEST EXPERIENCED WITH HEADPHONES"></p>
+            <p class="enter-meta" data-decode="ACTIVE THEORY // DIGITAL PRODUCTION STUDIO"></p>
+            <h1 id="enter-title" class="enter-title" data-decode="ACTIVE THEORY"></h1>
+            <p class="enter-meta dim" data-decode="AWARD-WINNING WEBGL & REAL-TIME 3D SHOWCASE"></p>
             <div class="enter-actions">
-                <button id="enter-sound" class="pill pill-primary" type="button" data-magnetic>Enter with sound</button>
-                <button id="enter-silent" class="pill" type="button" data-magnetic>Enter silently</button>
+                <button id="enter-sound" class="pill pill-primary" type="button" data-magnetic>ENTER WITH SOUND</button>
+                <button id="enter-silent" class="pill" type="button" data-magnetic>ENTER SILENTLY</button>
             </div>
         </div>
     </div>
 
+    <!-- Active Theory Minimalist Header -->
     <header class="top">
-        <a class="logo" href="/" aria-label="Lumen home">Lumen</a>
-        <nav id="nav" aria-label="Sections"></nav>
-        <div class="controls">
-            <button id="sound" class="pill" type="button" aria-pressed="false" data-magnetic>
-                <i class="bars" aria-hidden="true"><b></b><b></b><b></b></i><span>Audio off</span>
+        <div class="brand">
+            <a class="logo" href="/" aria-label="Active Theory Home">ACTIVE THEORY</a>
+            <span class="brand-sub">STUDIO // 2026</span>
+        </div>
+
+        <div class="telemetry">
+            <span id="telemetry-time">LA 09:24 // AMS 18:24</span>
+        </div>
+
+        <div class="header-right">
+            <div id="project-counter" class="counter-badge">[ 01 / 06 ]</div>
+            <button id="sound" class="pill" type="button" aria-pressed="false" data-magnetic aria-label="Toggle Sound">
+                <i class="bars" aria-hidden="true"><b></b><b></b><b></b></i><span>AUDIO OFF</span>
             </button>
-            <button id="gui-toggle" class="pill" type="button" aria-label="Open parameter panel (G)" data-magnetic>G</button>
+            <button id="info-toggle" class="pill" type="button" aria-label="Studio Info" data-magnetic>INFO</button>
+            <button id="gui-toggle" class="pill pill-icon" type="button" aria-label="Open Tuning Panel (G)" data-magnetic>G</button>
         </div>
     </header>
 
-    <div class="hud" aria-hidden="true">
-        <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
-        <div class="hud-block hud-left">
-            <span class="rec"><i></i>REC</span>
-            <span id="hud-tc">00:00:00:00</span>
-            <span id="hud-seq"></span>
+    <!-- Center Stage Overlay: Project Details -->
+    <main id="content">
+        <div class="project-info" id="project-info">
+            <div class="project-category" id="project-category">[ 01 // EXPERIENTIAL ]</div>
+            <h1 class="project-title" id="project-title">Paper Triangles</h1>
+            <p class="project-subtitle" id="project-subtitle">Dynamic light simulation, fluid typography and spatial audio in the browser.</p>
+            <div class="project-actions">
+                <button id="btn-view-project" class="pill pill-primary" type="button" data-magnetic>VIEW CASE STUDY</button>
+            </div>
         </div>
-        <div class="hud-block hud-right">
-            <span>CAM <b id="hud-cam">0 0 0</b></span>
-            <span>FOV <b id="hud-fov">0</b></span>
-            <span>FOC <b id="hud-focus">0</b></span>
-            <span>WRP <b id="hud-warp">0</b></span>
-            <span>FPS <b id="hud-fps">0</b></span>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <footer class="bottom-bar">
+        <div class="filter-tabs" id="filter-tabs">
+            <button class="tab-btn active" data-filter="ALL">ALL</button>
+            <button class="tab-btn" data-filter="EXPERIENTIAL">EXPERIENTIAL</button>
+            <button class="tab-btn" data-filter="PLATFORMS">PLATFORMS</button>
+            <button class="tab-btn" data-filter="R&D">R&D</button>
+        </div>
+
+        <nav class="project-pagination" id="project-pagination" aria-label="Projects Pagination">
+            <!-- Dynamically populated pills -->
+        </nav>
+
+        <div class="hint-drag">
+            <span>DRAG TO EXPLORE</span>
+        </div>
+    </footer>
+
+    <!-- Fullscreen Case Study Modal -->
+    <div id="case-study-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+        <div class="modal-backdrop" id="modal-backdrop"></div>
+        <div class="modal-container">
+            <div class="modal-header">
+                <div class="modal-meta" id="modal-meta">[ 01 // EXPERIENTIAL · 2026 ]</div>
+                <button id="modal-close" class="modal-close-btn" type="button" aria-label="Close Case Study" data-magnetic>[ CLOSE / ESC ]</button>
+            </div>
+            
+            <div class="modal-body">
+                <h2 class="modal-title" id="modal-title">Paper Triangles</h2>
+                <p class="modal-tagline" id="modal-tagline">Interactive 3D WebGL Brand Universe</p>
+                
+                <div class="modal-hero" id="modal-hero">
+                    <div class="modal-hero-glow" id="modal-hero-glow"></div>
+                    <div class="modal-hero-badge" id="modal-hero-badge">ACTIVE THEORY PRODUCTION</div>
+                </div>
+
+                <div class="modal-grid">
+                    <div class="modal-col main-col">
+                        <h3>PROJECT OVERVIEW</h3>
+                        <p id="modal-desc" class="modal-desc"></p>
+                        
+                        <h3>RECOGNITION & AWARDS</h3>
+                        <p id="modal-awards" class="modal-awards"></p>
+                    </div>
+
+                    <div class="modal-col side-col">
+                        <h3>CLIENT</h3>
+                        <p id="modal-client" class="modal-client"></p>
+
+                        <h3>YEAR</h3>
+                        <p id="modal-year" class="modal-year"></p>
+
+                        <h3>TECHNOLOGY</h3>
+                        <div id="modal-tags" class="tag-cloud"></div>
+
+                        <div class="modal-action-box">
+                            <a id="modal-launch" href="https://activetheory.net" target="_blank" rel="noopener" class="pill pill-primary pill-launch" data-magnetic>
+                                LAUNCH LIVE SITE ↗
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="reticle" aria-hidden="true">
-        <svg viewBox="-60 -60 120 120" width="120" height="120">
-            <circle r="44" fill="none" stroke="currentColor" stroke-width="0.75" stroke-dasharray="2 6" />
-            <path d="M-52 0h12M40 0h12M0 -52v12M0 40v12" stroke="currentColor" stroke-width="1" />
-            <path d="M-30 -36h-6v6M30 -36h6v6M-30 36h-6v-6M30 36h6v-6" fill="none" stroke="currentColor" stroke-width="1" />
-        </svg>
-        <span id="reticle-range">RNG 0</span>
+    <!-- Studio Info Modal -->
+    <div id="info-modal" class="modal" aria-hidden="true" role="dialog">
+        <div class="modal-backdrop" id="info-backdrop"></div>
+        <div class="modal-container modal-small">
+            <div class="modal-header">
+                <div class="modal-meta">[ STUDIO OVERVIEW ]</div>
+                <button id="info-close" class="modal-close-btn" type="button" data-magnetic>[ CLOSE ]</button>
+            </div>
+            <div class="modal-body">
+                <h2 class="modal-title">Active Theory</h2>
+                <p class="modal-tagline">Story · Art · Technology</p>
+                <p class="modal-desc">
+                    Founded in 2012. We blend story, art & technology as an in-house team of passionate makers in Los Angeles and Amsterdam.
+                    Our industry-leading web toolset consistently delivers award-winning work through uncompromising quality, performance, and real-time 3D craftsmanship.
+                </p>
+                <div class="studio-locations">
+                    <div class="loc">
+                        <strong>LOS ANGELES</strong>
+                        <span>VENICE BEACH, CA</span>
+                    </div>
+                    <div class="loc">
+                        <strong>AMSTERDAM</strong>
+                        <span>NETHERLANDS</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <main id="content"></main>
-
-    <div class="progress-track" aria-hidden="true"><div id="progress"></div></div>
-    <p class="hint" aria-hidden="true">Scroll · Move · Press G</p>
-    <div id="cursor" aria-hidden="true"></div>
+    <!-- Active Theory Dynamic Text & Skew Cursor -->
+    <div id="cursor" aria-hidden="true">
+        <span id="cursor-label">DRAG</span>
+    </div>
 
     <div class="fallback">
-        <h1>Lumen</h1>
-        <p>This experience needs WebGL 2 with float render targets. Try a recent version of Chrome, Firefox, Safari or Edge.</p>
+        <h1>Active Theory</h1>
+        <p>This experience needs WebGL 2 with float render targets. Try a modern browser with hardware acceleration enabled.</p>
     </div>
 
     <noscript><style>.enter{display:none}</style><p class="noscript">This site needs JavaScript.</p></noscript>

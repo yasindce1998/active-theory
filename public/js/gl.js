@@ -10,16 +10,25 @@ void main() {
 }`;
 
 export function createContext(canvas) {
-    const gl = canvas.getContext('webgl2', {
+    let gl = null;
+    const opts = {
         alpha: false,
         antialias: false,
-        depth: false,
+        depth: true,
         premultipliedAlpha: false,
         powerPreference: 'high-performance'
-    });
+    };
+    try {
+        gl = canvas.getContext('webgl2', opts);
+    } catch (e) {}
+    if (!gl) {
+        try {
+            gl = canvas.getContext('webgl2');
+        } catch (e) {}
+    }
     if (!gl) return null;
-    // Needed to render into half/full float textures (fluid sim, GPGPU particles, HDR)
-    const hasFloat = !!gl.getExtension('EXT_color_buffer_float');
+    // Check float buffer support
+    const hasFloat = !!(gl.getExtension('EXT_color_buffer_float') || gl.getExtension('WEBGL_color_buffer_float'));
     return { gl, hasFloat };
 }
 
@@ -60,6 +69,7 @@ export function setUniforms(gl, prog, values) {
         const loc = prog.uniforms[name];
         if (loc === undefined) continue;
         const v = values[name];
+        if (v === undefined || v === null) continue;
         if (v instanceof WebGLTexture) {
             gl.activeTexture(gl.TEXTURE0 + unit);
             gl.bindTexture(gl.TEXTURE_2D, v);
@@ -91,21 +101,70 @@ export function createTexture(gl, w, h, { internal, format, type, filter = gl.LI
     return tex;
 }
 
+function testColorRenderable(gl, internal, format, type) {
+    try {
+        const tex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texImage2D(gl.TEXTURE_2D, 0, internal, 2, 2, 0, format, type, null);
+        const fbo = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+        const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.deleteFramebuffer(fbo);
+        gl.deleteTexture(tex);
+        return status === gl.FRAMEBUFFER_COMPLETE;
+    } catch (e) {
+        return false;
+    }
+}
+
 export function createTarget(gl, w, h, opts) {
-    const tex = createTexture(gl, w, h, opts);
-    const fbo = gl.createFramebuffer();
+    let tex = createTexture(gl, w, h, opts);
+    let fbo = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
     let rb = null;
+
     if (opts.depth) {
         rb = gl.createRenderbuffer();
         gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
-        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, w, h);
-        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, rb);
+        try {
+            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h);
+            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, rb);
+        } catch (e) {
+            try {
+                gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, w, h);
+                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, rb);
+            } catch (e2) {}
+        }
     }
-    const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+
+    let status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+
+    // Auto-recovery if incomplete attachment
+    if (status !== gl.FRAMEBUFFER_COMPLETE) {
+        // Try removing depth buffer if that caused the error
+        if (rb) {
+            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, null);
+            gl.deleteRenderbuffer(rb);
+            rb = null;
+            status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+        }
+
+        // If still incomplete and format was half-float/float, fallback to standard RGBA8
+        if (status !== gl.FRAMEBUFFER_COMPLETE && opts.internal !== gl.RGBA8) {
+            gl.deleteTexture(tex);
+            tex = createTexture(gl, w, h, { internal: gl.RGBA8, format: gl.RGBA, type: gl.UNSIGNED_BYTE, filter: opts.filter || gl.LINEAR });
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+            status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+        }
+    }
+
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    if (status !== gl.FRAMEBUFFER_COMPLETE) throw new Error(`Framebuffer incomplete (0x${status.toString(16)})`);
+
     return {
         tex, fbo, w, h,
         texel: [1 / w, 1 / h],
@@ -130,10 +189,15 @@ export function createDouble(gl, w, h, opts) {
 export function formats(gl, hasFloat) {
     const ldr = { internal: gl.RGBA8, format: gl.RGBA, type: gl.UNSIGNED_BYTE };
     if (!hasFloat) return { rgba: ldr, rg: ldr, r: ldr };
+
+    const rgbaOk = testColorRenderable(gl, gl.RGBA16F, gl.RGBA, gl.HALF_FLOAT);
+    const rgOk = rgbaOk && testColorRenderable(gl, gl.RG16F, gl.RG, gl.HALF_FLOAT);
+    const rOk = rgbaOk && testColorRenderable(gl, gl.R16F, gl.RED, gl.HALF_FLOAT);
+
     return {
-        rgba: { internal: gl.RGBA16F, format: gl.RGBA, type: gl.HALF_FLOAT },
-        rg: { internal: gl.RG16F, format: gl.RG, type: gl.HALF_FLOAT },
-        r: { internal: gl.R16F, format: gl.RED, type: gl.HALF_FLOAT }
+        rgba: rgbaOk ? { internal: gl.RGBA16F, format: gl.RGBA, type: gl.HALF_FLOAT } : ldr,
+        rg: rgOk ? { internal: gl.RG16F, format: gl.RG, type: gl.HALF_FLOAT } : (rgbaOk ? { internal: gl.RGBA16F, format: gl.RGBA, type: gl.HALF_FLOAT } : ldr),
+        r: rOk ? { internal: gl.R16F, format: gl.RED, type: gl.HALF_FLOAT } : (rgbaOk ? { internal: gl.RGBA16F, format: gl.RGBA, type: gl.HALF_FLOAT } : ldr)
     };
 }
 

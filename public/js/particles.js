@@ -136,11 +136,11 @@ export class Particles {
         this.render = createProgram(gl, RENDER_VS, RENDER_FS);
         this.emptyVao = gl.createVertexArray();
 
-        // Float32 positions keep precision; fall back to half floats if float32 targets are unsupported
-        const fmt = hasFloat
-            ? { internal: gl.RGBA32F, format: gl.RGBA, type: gl.FLOAT, filter: gl.NEAREST }
-            : null;
-        if (!fmt) throw new Error('Particles require EXT_color_buffer_float');
+        if (!hasFloat) {
+            this.disabled = true;
+            return;
+        }
+        const fmt = { internal: gl.RGBA32F, format: gl.RGBA, type: gl.FLOAT, filter: gl.NEAREST };
 
         const data = new Float32Array(this.count * 4);
         for (let i = 0; i < this.count; i++) {
@@ -157,6 +157,7 @@ export class Particles {
     }
 
     update(dt, time, state) {
+        if (this.disabled) return;
         const { gl } = this;
         gl.disable(gl.BLEND);
         pass(gl, this.vao, this.sim, this.positions.write, {
@@ -175,6 +176,7 @@ export class Particles {
     }
 
     draw(camera, colors, pixelRatio, focus = 6, aperture = 0.15) {
+        if (this.disabled) return;
         const { gl } = this;
         setUniforms(gl, this.render, {
             uPositions: this.positions.read.tex,
