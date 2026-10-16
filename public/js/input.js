@@ -1,4 +1,4 @@
-// High-Performance Momentum Physics & Input Solver for Active Theory
+// High-Performance Momentum Physics & Input Solver for the Portfolio
 // Supports direct pointer dragging, fling inertia decay, wheel momentum,
 // magnetic spring snapping, and click vs drag discrimination.
 
@@ -159,7 +159,7 @@ export class Input {
             } else if (e.key === 'Home') {
                 this.goTo(0);
             } else if (e.key === 'End') {
-                this.goTo(this.sections - 1);
+                this.goTo(this.visibleCount - 1);
             }
         });
     }
@@ -168,9 +168,18 @@ export class Input {
         this.clickHandler = fn;
     }
 
+    // Number of cards in the active filter (set by UI when filtering)
+    set visibleCount(n) {
+        this._visibleCount = n;
+    }
+
+    get visibleCount() {
+        return this._visibleCount || this.sections;
+    }
+
     // Moves to a project index along the shortest path around the looping ribbon
     goTo(index) {
-        const N = this.sections;
+        const N = this.visibleCount;
         const from = Math.round(this.scroll.target);
         const diff = index - (((from % N) + N) % N);
         this.step(((diff % N) + N * 1.5) % N - N * 0.5);
@@ -228,7 +237,8 @@ export class Input {
         s.speed = (s.current - prevCurrent) / Math.max(dt, 1e-3);
 
         // Notify section change if active index changed
-        const activeIdx = ((Math.round(s.current) % this.sections) + this.sections) % this.sections;
+        const N = this.visibleCount;
+        const activeIdx = ((Math.round(s.current) % N) + N) % N;
         if (activeIdx !== this.lastSectionIndex) {
             this.lastSectionIndex = activeIdx;
             this.sectionChangeListeners.forEach(fn => fn(activeIdx));
@@ -240,7 +250,8 @@ export class Input {
     }
 
     get activeIndex() {
-        return ((Math.round(this.scroll.current) % this.sections) + this.sections) % this.sections;
+        const N = this.visibleCount;
+        return ((Math.round(this.scroll.current) % N) + N) % N;
     }
 
     get progress() {

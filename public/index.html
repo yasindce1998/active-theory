@@ -4,12 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#050508">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23050508'/%3E%3Cpolygon points='16,4 28,26 4,26' fill='none' stroke='%2300f2fe' stroke-width='2'/%3E%3Ccircle cx='16' cy='18' r='3' fill='%2300f2fe'/%3E%3C/svg%3E">
-    <meta name="description" content="Active Theory · Award-winning creative digital experiences, WebGL 3D production, and real-time graphics.">
-    <title>Active Theory · Creative Digital Experiences</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23050508'/%3E%3Cpath d='M6 24 L16 6 L26 24' fill='none' stroke='%2300f2fe' stroke-width='2'/%3E%3Ccircle cx='16' cy='19' r='2.5' fill='none' stroke='%23ff2a4d' stroke-width='2'/%3E%3C/svg%3E">
+    <title>Mohammed Yasin — Security Engineer & Digital Architect</title>
+    <meta name="description" content="Mohammed Yasin — Security engineer building kernel-level offense and cloud-native defense. eBPF, Rust, Golang, Kubernetes. Interactive WebGL portfolio.">
+    <meta property="og:title" content="Mohammed Yasin — Security Engineer & Digital Architect">
+    <meta property="og:description" content="Kernel-level offense, cloud-native defense. 5+ years across eBPF, Rust, Golang and Kubernetes. Interactive WebGL portfolio.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yasindce1998.github.io/">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Mohammed Yasin — Security Engineer & Digital Architect">
+    <meta name="twitter:description" content="Kernel-level offense, cloud-native defense. Interactive WebGL portfolio.">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/cinematic.css">
     <link rel="modulepreload" href="/js/main.js">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Mohammed Yasin",
+        "jobTitle": "Security Engineer & Digital Architect",
+        "email": "mailto:yasindce1998@gmail.com",
+        "url": "https://yasindce1998.github.io/",
+        "address": { "@type": "PostalAddress", "addressLocality": "Bengaluru", "addressCountry": "IN" },
+        "sameAs": [
+            "https://github.com/yasindce1998",
+            "https://linkedin.com/in/mohammed-yasin-4660b9206",
+            "https://x.com/yasindce1998"
+        ],
+        "knowsAbout": ["eBPF", "Linux Kernel", "Kubernetes", "Offensive Security", "Golang", "Rust", "WebAssembly", "Distributed Systems"]
+    }
+    </script>
 </head>
 <body>
     <canvas id="gl" aria-hidden="true"></canvas>
@@ -17,9 +41,9 @@
     <!-- Splash Enter Screen -->
     <div id="enter" class="enter" role="dialog" aria-labelledby="enter-title">
         <div class="enter-inner">
-            <p class="enter-meta" data-decode="ACTIVE THEORY // DIGITAL PRODUCTION STUDIO"></p>
-            <h1 id="enter-title" class="enter-title" data-decode="ACTIVE THEORY"></h1>
-            <p class="enter-meta dim" data-decode="AWARD-WINNING WEBGL & REAL-TIME 3D SHOWCASE"></p>
+            <p class="enter-meta" data-decode="SECURITY ENGINEER // BENGALURU, INDIA"></p>
+            <h1 id="enter-title" class="enter-title" data-decode="MOHAMMED YASIN"></h1>
+            <p class="enter-meta dim" data-decode="KERNEL-LEVEL OFFENSE · CLOUD-NATIVE DEFENSE"></p>
             <div class="enter-actions">
                 <button id="enter-sound" class="pill pill-primary" type="button" data-magnetic>ENTER WITH SOUND</button>
                 <button id="enter-silent" class="pill" type="button" data-magnetic>ENTER SILENTLY</button>
@@ -27,23 +51,23 @@
         </div>
     </div>
 
-    <!-- Active Theory Minimalist Header -->
+    <!-- Header -->
     <header class="top">
         <div class="brand">
-            <a class="logo" href="/" aria-label="Active Theory Home">ACTIVE THEORY</a>
-            <span class="brand-sub">STUDIO // 2026</span>
+            <a class="logo" href="/" aria-label="Mohammed Yasin — Home">MOHAMMED YASIN</a>
+            <span class="brand-sub">SECURITY ENGINEER // KERNEL → CLOUD</span>
         </div>
 
         <div class="telemetry">
-            <span id="telemetry-time">LA 09:24 // AMS 18:24</span>
+            <span id="telemetry-time">BLR 14:32</span>
         </div>
 
         <div class="header-right">
-            <div id="project-counter" class="counter-badge">[ 01 / 06 ]</div>
+            <div id="project-counter" class="counter-badge">[ 01 / 07 ]</div>
             <button id="sound" class="pill" type="button" aria-pressed="false" data-magnetic aria-label="Toggle Sound">
                 <i class="bars" aria-hidden="true"><b></b><b></b><b></b></i><span>AUDIO OFF</span>
             </button>
-            <button id="info-toggle" class="pill" type="button" aria-label="Studio Info" data-magnetic>INFO</button>
+            <button id="info-toggle" class="pill" type="button" aria-label="About Mohammed Yasin" data-magnetic>ABOUT</button>
             <button id="gui-toggle" class="pill pill-icon" type="button" aria-label="Open Tuning Panel (G)" data-magnetic>G</button>
         </div>
     </header>
@@ -51,11 +75,11 @@
     <!-- Center Stage Overlay: Project Details -->
     <main id="content">
         <div class="project-info" id="project-info">
-            <div class="project-category" id="project-category">[ 01 // EXPERIENTIAL ]</div>
-            <h1 class="project-title" id="project-title">Paper Triangles</h1>
-            <p class="project-subtitle" id="project-subtitle">Dynamic light simulation, fluid typography and spatial audio in the browser.</p>
+            <div class="project-category" id="project-category">[ 01 // OFFENSE ]</div>
+            <h1 class="project-title" id="project-title">RedHands</h1>
+            <p class="project-subtitle" id="project-subtitle">MCP server exposing offensive-security tooling to AI agents.</p>
             <div class="project-actions">
-                <button id="btn-view-project" class="pill pill-primary" type="button" data-magnetic>VIEW CASE STUDY</button>
+                <button id="btn-view-project" class="pill pill-primary" type="button" data-magnetic>VIEW PROJECT</button>
             </div>
         </div>
     </main>
@@ -64,17 +88,20 @@
     <footer class="bottom-bar">
         <div class="filter-tabs" id="filter-tabs">
             <button type="button" class="tab-btn active" data-filter="ALL">ALL</button>
-            <button type="button" class="tab-btn" data-filter="EXPERIENTIAL">EXPERIENTIAL</button>
-            <button type="button" class="tab-btn" data-filter="PLATFORMS">PLATFORMS</button>
-            <button type="button" class="tab-btn" data-filter="R&D">R&D</button>
+            <button type="button" class="tab-btn" data-filter="OFFENSE">OFFENSE</button>
+            <button type="button" class="tab-btn" data-filter="DEFENSE">DEFENSE</button>
+            <button type="button" class="tab-btn" data-filter="RESEARCH">RESEARCH</button>
         </div>
 
         <nav class="project-pagination" id="project-pagination" aria-label="Projects Pagination">
             <!-- Dynamically populated pills -->
         </nav>
 
-        <div class="hint-drag">
-            <span>DRAG TO EXPLORE</span>
+        <div class="contact-links">
+            <a class="contact-link" href="mailto:yasindce1998@gmail.com" data-magnetic>EMAIL</a>
+            <a class="contact-link" href="https://github.com/yasindce1998" target="_blank" rel="noopener" data-magnetic>GITHUB</a>
+            <a class="contact-link" href="https://linkedin.com/in/mohammed-yasin-4660b9206" target="_blank" rel="noopener" data-magnetic>LINKEDIN</a>
+            <a class="contact-link" href="https://x.com/yasindce1998" target="_blank" rel="noopener" data-magnetic>X</a>
         </div>
     </footer>
 
@@ -83,41 +110,44 @@
         <div class="modal-backdrop" id="modal-backdrop"></div>
         <div class="modal-container">
             <div class="modal-header">
-                <div class="modal-meta" id="modal-meta">[ 01 // EXPERIENTIAL · 2026 ]</div>
+                <div class="modal-meta" id="modal-meta">[ 01 // OFFENSE · 2026 ]</div>
                 <button id="modal-close" class="modal-close-btn" type="button" aria-label="Close Case Study" data-magnetic>[ CLOSE / ESC ]</button>
             </div>
-            
+
             <div class="modal-body">
-                <h2 class="modal-title" id="modal-title">Paper Triangles</h2>
-                <p class="modal-tagline" id="modal-tagline">Interactive 3D WebGL Brand Universe</p>
-                
+                <h2 class="modal-title" id="modal-title">RedHands</h2>
+                <p class="modal-tagline" id="modal-tagline">Offensive Security Tooling for AI Agents</p>
+
                 <div class="modal-hero" id="modal-hero">
                     <div class="modal-hero-glow" id="modal-hero-glow"></div>
-                    <div class="modal-hero-badge" id="modal-hero-badge">ACTIVE THEORY PRODUCTION</div>
+                    <div class="modal-hero-badge" id="modal-hero-badge">OPEN SOURCE</div>
                 </div>
 
                 <div class="modal-grid">
                     <div class="modal-col main-col">
                         <h3>PROJECT OVERVIEW</h3>
                         <p id="modal-desc" class="modal-desc"></p>
-                        
-                        <h3>RECOGNITION & AWARDS</h3>
-                        <p id="modal-awards" class="modal-awards"></p>
+
+                        <h3>REPOSITORY</h3>
+                        <p id="modal-repo" class="modal-repo"></p>
                     </div>
 
                     <div class="modal-col side-col">
-                        <h3>CLIENT</h3>
-                        <p id="modal-client" class="modal-client"></p>
+                        <h3>FOCUS AREA</h3>
+                        <p id="modal-focus" class="modal-focus"></p>
 
                         <h3>YEAR</h3>
                         <p id="modal-year" class="modal-year"></p>
+
+                        <h3>STATUS</h3>
+                        <p id="modal-status" class="modal-status"></p>
 
                         <h3>TECHNOLOGY</h3>
                         <div id="modal-tags" class="tag-cloud"></div>
 
                         <div class="modal-action-box">
-                            <a id="modal-launch" href="https://activetheory.net" target="_blank" rel="noopener" class="pill pill-primary pill-launch" data-magnetic>
-                                LAUNCH LIVE SITE ↗
+                            <a id="modal-launch" href="https://github.com/yasindce1998" target="_blank" rel="noopener" class="pill pill-primary pill-launch" data-magnetic>
+                                VIEW SOURCE ↗
                             </a>
                         </div>
                     </div>
@@ -126,43 +156,53 @@
         </div>
     </div>
 
-    <!-- Studio Info Modal -->
-    <div id="info-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Studio overview">
+    <!-- About Modal -->
+    <div id="info-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="About Mohammed Yasin">
         <div class="modal-backdrop" id="info-backdrop"></div>
-        <div class="modal-container modal-small">
+        <div class="modal-container">
             <div class="modal-header">
-                <div class="modal-meta">[ STUDIO OVERVIEW ]</div>
-                <button id="info-close" class="modal-close-btn" type="button" aria-label="Close Studio Overview" data-magnetic>[ CLOSE ]</button>
+                <div class="modal-meta">[ ABOUT ]</div>
+                <button id="info-close" class="modal-close-btn" type="button" aria-label="Close About" data-magnetic>[ CLOSE ]</button>
             </div>
             <div class="modal-body">
-                <h2 class="modal-title">Active Theory</h2>
-                <p class="modal-tagline">Story · Art · Technology</p>
+                <h2 class="modal-title">Mohammed Yasin</h2>
+                <p class="modal-tagline">Security Engineer & Digital Architect · Bengaluru</p>
                 <p class="modal-desc">
-                    Founded in 2012. We blend story, art & technology as an in-house team of passionate makers in Los Angeles and Amsterdam.
-                    Our industry-leading web toolset consistently delivers award-winning work through uncompromising quality, performance, and real-time 3D craftsmanship.
+                    I work at the boundary between creation and destruction — kernel-level offense
+                    as a rehearsal for defense, and cloud-native defense built from knowing exactly
+                    how systems fail. Five years engineering production systems across Golang, Rust,
+                    Kubernetes, and eBPF: 11 systems shipped, from kernel observability to enterprise
+                    cloud platforms.
                 </p>
-                <div class="studio-locations">
-                    <div class="loc">
-                        <strong>LOS ANGELES</strong>
-                        <span>VENICE BEACH, CA</span>
-                    </div>
-                    <div class="loc">
-                        <strong>AMSTERDAM</strong>
-                        <span>NETHERLANDS</span>
-                    </div>
+                <div class="modal-stats">
+                    <div class="stat"><strong>5+</strong><span>YEARS IN PRODUCTION</span></div>
+                    <div class="stat"><strong>11</strong><span>SYSTEMS SHIPPED</span></div>
+                    <div class="stat"><strong>RING 0 → CLOUD</strong><span>RANGE</span></div>
+                </div>
+
+                <h3 class="modal-sub">EXPERIENCE</h3>
+                <div id="exp-list" class="exp-list"></div>
+
+                <h3 class="modal-sub">SELECTED CLIENT WORK</h3>
+                <div id="client-list" class="client-list"></div>
+
+                <div class="modal-action-box">
+                    <a href="mailto:yasindce1998@gmail.com" class="pill pill-primary pill-launch" data-magnetic>GET IN TOUCH ↗</a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Active Theory Dynamic Text & Skew Cursor -->
+    <!-- Dynamic Text & Skew Cursor -->
     <div id="cursor" aria-hidden="true">
         <span id="cursor-label">DRAG</span>
     </div>
 
     <div class="fallback">
-        <h1>Active Theory</h1>
-        <p>This experience needs WebGL 2 with float render targets. Try a modern browser with hardware acceleration enabled.</p>
+        <h1>Mohammed Yasin</h1>
+        <p>Security Engineer & Digital Architect — kernel-level offense, cloud-native defense.
+            This experience needs WebGL 2 with float render targets; try a modern browser with hardware acceleration enabled.
+            Meanwhile: <a href="https://github.com/yasindce1998" style="color:inherit">github.com/yasindce1998</a></p>
     </div>
 
     <noscript><style>.enter{display:none}</style><p class="noscript">This site needs JavaScript.</p></noscript>

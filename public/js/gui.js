@@ -2,7 +2,7 @@
 // Values persist to localStorage and can be exported/imported as JSON presets,
 // so look-dev tweaks don't require code changes.
 
-const STORAGE_KEY = 'activetheory.params.v1';
+const STORAGE_KEY = 'yasin-portfolio.params.v1';
 
 export class Gui {
     constructor(params, schema) {

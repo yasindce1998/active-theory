@@ -1,116 +1,157 @@
-// Active Theory Portfolio & Experience Configuration
-// High-end digital production showcase with interactive 3D ribbon physics,
-// liquid shaders, case studies, and live parameter tuning.
+// Mohammed Yasin — Immersive WebGL Portfolio Configuration
+// Kernel-to-cloud security engineering showcase with interactive 3D ribbon
+// physics, liquid shaders, case studies, and live parameter tuning.
+
+export const OWNER = {
+    name: 'Mohammed Yasin',
+    role: 'Security Engineer & Digital Architect',
+    location: 'Bengaluru, India',
+    timezone: 'Asia/Kolkata',
+    coords: '12.9716° N // 77.5946° E',
+    email: 'yasindce1998@gmail.com',
+    github: 'https://github.com/yasindce1998',
+    linkedin: 'https://linkedin.com/in/mohammed-yasin-4660b9206',
+    twitter: 'https://x.com/yasindce1998',
+    leetcode: 'https://leetcode.com/u/yasindce1998'
+};
 
 export const PROJECTS = [
     {
-        id: 'paper-triangles',
+        id: 'redhands',
         num: '01',
-        title: 'Paper Triangles',
-        tagline: 'Interactive 3D WebGL Brand Universe',
-        category: 'EXPERIENTIAL',
-        client: 'Paper Triangles Studio',
+        title: 'RedHands',
+        tagline: 'Offensive Security Tooling for AI Agents',
+        category: 'OFFENSE',
+        focus: 'AI Agent Offense',
         year: '2026',
-        subtitle: 'Dynamic light simulation, fluid typography and spatial audio in the browser.',
-        description: 'An interactive brand universe celebrating the synergy between physical origami forms and digital shader geometry. Real-time procedural tessellation, interactive GPU fluid ripples, and spatial binaural sound create an unforgettable sensory experience that pushes WebGL 2.0 to its absolute limits.',
-        awards: 'FWA OF THE DAY · AWWWARDS SITE OF THE MONTH',
-        tags: ['WebGL 2.0', 'Procedural Mesh', 'GPU Fluid Solver', 'Spatial Audio'],
-        accent: '#00f2fe',
-        hue: 0.52,
-        camera: [0, 0, 7.2],
-        target: [0, 0, 0],
-        roll: 0
+        status: 'ACTIVE DEVELOPMENT',
+        url: 'https://github.com/yasindce1998/RedHands',
+        subtitle: 'MCP server exposing offensive-security tooling to AI agents.',
+        description: 'An MCP (Model Context Protocol) server that hands AI agents a full offensive-security workbench. Agents can chain reconnaissance, exploitation, and post-exploitation tools through a standardized interface — turning an LLM into an operator with a real toolkit, and giving defenders a platform to study how agentic offense actually behaves.',
+        tags: ['Golang', 'MCP', 'AI Agents', 'Offensive Tooling'],
+        accent: '#ff2a4d',
+        hue: 0.98,
+        logs: ['> agent.connect(mcp://redhands)', '> tools.enumerate ... 23 loaded', '> payload.chain(recon, exploit)']
     },
     {
-        id: 'dreamwave',
+        id: 'aegis-shadow',
         num: '02',
-        title: 'Dreamwave',
-        tagline: 'Massive Real-Time Spatial Event Platform',
-        category: 'PLATFORMS',
-        client: 'Dreamwave Labs',
-        year: '2025',
-        subtitle: 'Next-generation virtual world engine supporting 100k+ concurrent connected users.',
-        description: 'Engineered as a distributed virtual events engine for concerts and immersive product reveals. Featuring custom binary geometry streaming, high-density avatars with instanced GPU skinning, and spatial audio with dynamic Doppler effects, all rendered smoothly at 60 FPS on desktop and mobile.',
-        awards: 'WEBBY AWARDS WINNER · BEST TECHNICAL EXECUTION',
-        tags: ['Hydra Engine', 'Binary WebSocket', 'Volumetric Avatars', 'Spatial 3D'],
-        accent: '#ff0055',
-        hue: 0.95,
-        camera: [0, 0, 7.2],
-        target: [0, 0, 0],
-        roll: 0.02
-    },
-    {
-        id: 'mamba-forever',
-        num: '03',
-        title: 'Mamba Forever',
-        tagline: 'Interactive Particle Memorial Sculpture',
-        category: 'EXPERIENTIAL',
-        client: 'Nike & Kobe Bryant Foundation',
-        year: '2024',
-        subtitle: 'Quarter-million interactive light motes reacting to user tribute messages in real-time.',
-        description: 'A global digital memorial sculpted from 250,000 GPGPU particles following divergence-free curl noise fields. Each visitor can submit tribute thoughts that manifest as floating ribbons of golden light, coalescing into the iconic silhouette with physically based gold-leaf shader response.',
-        awards: 'CANNES LIONS GOLD · FWA OF THE MONTH · D&AD YELLOW PENCIL',
-        tags: ['GPGPU Particles', 'Curl Noise', 'Physically Based Shaders', 'Web Audio'],
-        accent: '#ffb700',
-        hue: 0.12,
-        camera: [0, 0, 7.2],
-        target: [0, 0, 0],
-        roll: -0.02
-    },
-    {
-        id: 'cyberpunk-city',
-        num: '04',
-        title: 'Night City Holo',
-        tagline: 'Holographic Volumetric 3D Map & UI',
-        category: 'INTERACTIVE',
-        client: 'CD PROJEKT RED',
-        year: '2024',
-        subtitle: 'Futuristic multi-layer architectural scanning with screen-space reflections.',
-        description: 'An interactive 3D tactical map of Night City rendered in real-time browser WebGL. Visitors navigate districts across multi-altitude flight corridors with volumetric laser scans, real-time depth of field, tactile cyberpunk audio UI, and zero asset loading wait time.',
-        awards: 'AWWWARDS SITE OF THE YEAR NOMINEE · FWA OF THE DAY',
-        tags: ['Volumetric Light', 'Screen-Space Reflections', 'Multi-Layer HUD', 'Audio Synthesis'],
-        accent: '#00ff9d',
-        hue: 0.44,
-        camera: [0, 0, 7.2],
-        target: [0, 0, 0],
-        roll: 0.03
-    },
-    {
-        id: 'medusa-engine',
-        num: '05',
-        title: 'Medusa Engine',
-        tagline: 'Proprietary Zero-Allocation WebGL Framework',
-        category: 'R&D',
-        client: 'Active Theory Labs',
-        year: '2025',
-        subtitle: 'High-performance rendering foundation engineered for rock-solid 120 FPS motion.',
-        description: 'Our in-house graphics framework built from first principles for creative web production. Featuring garbage-collection-free render loops, ping-pong float framebuffers, instanced draw calls, and unified post-processing pipeline for seamless multi-platform performance.',
-        awards: 'OPEN SOURCE LAB EXPERIMENT · TECH EXCELLENCE',
-        tags: ['Zero Allocation', 'FBO Physics', 'GLSL 3.0', '120 FPS Pipeline'],
+        title: 'Aegis-Shadow',
+        tagline: 'Dual-Module eBPF Rootkit & Runtime Auditor',
+        category: 'RESEARCH',
+        focus: 'Kernel Research',
+        year: '2026',
+        status: 'RESEARCH',
+        url: 'https://github.com/yasindce1998/Aegis-Shadow',
+        subtitle: 'Rootkit techniques paired module-for-module with runtime auditing.',
+        description: 'A dual-module eBPF framework that pairs kernel rootkit techniques with their runtime audit counterparts — every hiding primitive ships with the detection that catches it. Built to understand ring-0 offense honestly: process hiding, syscall hijacking, and tracepoint manipulation, each mirrored by a verifier-grade audit hook.',
+        tags: ['Rust', 'eBPF', 'Linux Kernel', 'Runtime Auditing'],
         accent: '#9d4edd',
         hue: 0.77,
-        camera: [0, 0, 7.2],
-        target: [0, 0, 0],
-        roll: -0.01
+        logs: ['> bpf.load(aegis_shadow.o)', '> ring0.attach(tracepoint)', '> audit.mirror(hide_module) OK']
     },
     {
-        id: 'fluid-surface',
-        num: '06',
-        title: 'Houdini Fluid Lab',
-        tagline: 'Navier-Stokes Real-Time Surface Tension Solver',
-        category: 'R&D',
-        client: 'R&D Explorations',
+        id: 'kubedagger',
+        num: '03',
+        title: 'KubeDagger',
+        tagline: 'eBPF Offensive Toolkit for Kubernetes',
+        category: 'OFFENSE',
+        focus: 'Container Offense',
+        year: '2023',
+        status: 'STABLE',
+        url: 'https://github.com/yasindce1998/KubeDagger',
+        subtitle: 'Network discovery, process hiding, and container breakouts from inside the cluster.',
+        description: 'An eBPF offensive toolkit built for Kubernetes environments: in-cluster network discovery, process hiding from security agents, and container escape primitives — all running at the kernel level where most runtime defenses cannot see. Designed for red teams validating container hardening and for blue teams understanding their blind spots.',
+        tags: ['Golang', 'eBPF', 'Kubernetes', 'Container Escape'],
+        accent: '#ff7a1a',
+        hue: 0.08,
+        logs: ['> net.discover(pod_cidr)', '> hide.from(runtime_agent)', '> breakout.namespace escape']
+    },
+    {
+        id: 'neurontrace',
+        num: '04',
+        title: 'NeuronTrace',
+        tagline: 'Kernel-Level Behavioral Containment for AI Agents',
+        category: 'DEFENSE',
+        focus: 'AI Agent Defense',
         year: '2026',
-        subtitle: 'GPU-accelerated Eulerian liquid simulation with dynamic chromatic dispersion.',
-        description: 'A study in interactive fluid dynamics running directly in WebGL 2 float textures. Pointer motion injects momentum and dye vorticity, with multi-pass Jacobi pressure solvers calculating buoyant surface waves that distort background media with true chromatic dispersion.',
-        awards: 'SIGGRAPH REAL-TIME LIVE SHOWCASE',
-        tags: ['Navier-Stokes', 'Jacobi Solvers', 'Advection', 'Dispersion Shader'],
+        status: 'ACTIVE DEVELOPMENT',
+        url: 'https://github.com/yasindce1998/NeuronTrace',
+        subtitle: 'Containing AI agent behavior at the syscall layer, before damage lands.',
+        description: 'Kernel-level behavioral containment for AI agents operating at the syscall layer. NeuronTrace profiles what an agent is *supposed* to do, then fences what it *can* do — intercepting file, network, and process syscalls through eBPF/LSM hooks so a prompt-injected or runaway agent hits a hard kernel boundary, not a hopeful sandbox.',
+        tags: ['Rust', 'eBPF', 'LSM', 'AI Containment'],
+        accent: '#00f2fe',
+        hue: 0.52,
+        logs: ['> profile.agent(policy.yaml)', '> fence.syscalls(openat, execve)', '> contain.breach_attempt BLOCKED']
+    },
+    {
+        id: 'barzakh',
+        num: '05',
+        title: 'Barzakh',
+        tagline: 'Firmware Threat Research Platform',
+        category: 'RESEARCH',
+        focus: 'Firmware Research',
+        year: '2026',
+        status: 'RESEARCH',
+        url: 'https://github.com/yasindce1998/Barzakh',
+        subtitle: 'Modeling bootkit threats from BlackLotus to CosmicStrand — with paired detection.',
+        description: 'A firmware research platform modeling real-world bootkit threats — BlackLotus, LogoFAIL, CosmicStrand — as reproducible lab artifacts, each paired with a working detection. Barzakh (the boundary between worlds) studies the gap between firmware and OS: UEFI implants, boot-chain persistence, and the trust boundaries that fail before the kernel ever loads.',
+        tags: ['Rust', 'C', 'UEFI', 'Bootkit Analysis'],
+        accent: '#ffb700',
+        hue: 0.12,
+        logs: ['> boot.chain(uefi → shim → grub)', '> implant.model(blacklotus)', '> detect.early_boot OK']
+    },
+    {
+        id: 'warmor',
+        num: '06',
+        title: 'Warmor',
+        tagline: 'eBPF Monitoring with WebAssembly Policies',
+        category: 'DEFENSE',
+        focus: 'Runtime Defense',
+        year: '2025',
+        status: 'STABLE',
+        url: 'https://github.com/yasindce1998/Warmor',
+        subtitle: 'Syscall visibility from eBPF, policy logic from WebAssembly.',
+        description: 'Warmor fuses two runtimes: eBPF for zero-overhead syscall monitoring in the kernel, and WebAssembly for expressing security policies as portable, sandboxed modules. Policies compile once and run anywhere — the kernel feeds events, WASM decides, and enforcement happens at the source.',
+        tags: ['Golang', 'eBPF', 'WebAssembly', 'Policy Engine'],
+        accent: '#00ff9d',
+        hue: 0.42,
+        logs: ['> monitor.attach(syscall_trace)', '> policy.load(wasm) verified', '> verdict.deny(execve /tmp/x)']
+    },
+    {
+        id: 'staticzero',
+        num: '07',
+        title: 'StaticZero',
+        tagline: 'eBPF Telecom Security Framework',
+        category: 'RESEARCH',
+        focus: 'Telecom Research',
+        year: '2026',
+        status: 'RESEARCH',
+        url: 'https://github.com/yasindce1998/StaticZero',
+        subtitle: 'Rogue towers, downgrade attacks, and IMSI catchers — from 2G through 5G.',
+        description: 'An eBPF framework for telecom security research across 2G–5G: detecting rogue base stations, inter-radio downgrade attacks, and IMSI catchers from the device side. StaticZero instruments the modem interface boundary so a phone can tell when the network beneath it stops being trustworthy.',
+        tags: ['Rust', 'eBPF', '5G', 'Rogue Tower Detection'],
         accent: '#3a86ff',
         hue: 0.60,
-        camera: [0, 0, 7.2],
-        target: [0, 0, 0],
-        roll: 0
+        logs: ['> radio.monitor(2G..5G)', '> downgrade.attack DETECTED', '> tower.trust(fingerprint) LOW']
     }
+];
+
+export const CATEGORIES = ['ALL', 'OFFENSE', 'DEFENSE', 'RESEARCH'];
+
+// Experience timeline (About modal)
+export const EXPERIENCE = [
+    { role: 'Application Developer', company: 'IBM', period: '2025 — PRESENT' },
+    { role: 'Software Engineer (A2)', company: 'EPAM Systems', period: '2025' },
+    { role: 'Senior Software Developer', company: 'Infosys', period: '2023 — 2025' },
+    { role: 'Cyber Security Engineer', company: 'AccuKnox', period: '2021 — 2023' }
+];
+
+export const CLIENT_WORK = [
+    { client: 'Kroger', via: 'IBM', note: 'Geospatial location services & delivery routing — Golang, PostGIS, YugabyteDB, Redis' },
+    { client: 'P&G', via: 'EPAM', note: 'AI-driven video analytics platform — Kafka ingestion, Golang consumers' },
+    { client: 'Bank of America', via: 'Infosys', note: 'Self-service cloud provisioning with compliance guardrails — OpenShift, Tekton, ArgoCD' },
+    { client: 'AccuKnox SaaS + KubeArmor', via: 'AccuKnox', note: 'Runtime security enforcement & workload hardening — BPF-LSM, AppArmor' }
 ];
 
 // Alias for backwards compatibility with any systems expecting SECTIONS
@@ -119,12 +160,6 @@ export const SECTIONS = PROJECTS.map((p, i) => ({
     code: `[ ${p.num} // ${p.category} ]`,
     title: p.title,
     body: p.subtitle,
-    camera: p.camera,
-    target: p.target,
-    roll: p.roll,
-    shape: i % 4,
-    hue: p.hue,
-    blob: { scale: 0.8, amp: 0.2, iridescence: 0.5, energy: 0.9 },
     project: p
 }));
 
@@ -140,12 +175,12 @@ export const PARAMS = {
     cardSpacing: 3.5,
     cardTilt: 1.3,
     cardElevate: 0.8,
-    
+
     // Liquid & Shaders
     liquidDistortion: 1.4,
     chromaticAberration: 0.035,
     cardRippleSpeed: 3.2,
-    
+
     // Lens & Post-processing
     bloomStrength: 0.5,
     bloomThreshold: 1.1,
@@ -153,7 +188,7 @@ export const PARAMS = {
     exposure: 0.95,
     grain: 0.045,
     vignette: 0.85,
-    
+
     // Environment & Camera
     dustIntensity: 0.75,
     cameraSway: 0.8,

@@ -1,70 +1,56 @@
-# Active Theory · Creative Digital Experiences
+# Mohammed Yasin · Immersive WebGL Portfolio
 
-A high-end, real-time WebGL 2 showcase engineered to mirror the signature look, feel, and buttery-smooth motion of **[activetheory.net](https://activetheory.net)**. Featuring an interactive 3D curved project ribbon with physical momentum drag, localized liquid texture displacement shaders, tactile Web Audio feedback, dynamic contextual cursor, and full case study transitions. Zero dependencies, no build step, no external assets.
+Security engineer working on kernel-level offense and cloud-native defense. This portfolio is a real-time WebGL 2 experience: open-source projects sit on a curved 3D ribbon you can drag and fling, with liquid-displacement shaders, a GPU fluid sim, synthesized Web Audio, and full case-study views. It has no dependencies, no build step, and no external assets.
 
 ```bash
 npm start            # or: node server.js, ./start.sh, start.bat
 ```
 
-Open **http://localhost:7890**. Drag to explore, click any project to expand its case study, and press **G** for the live parameter panel.
+Open **http://localhost:7890**. Drag to explore, click a card to open its case study, use the arrow keys to step between projects, and press **G** for the live parameter panel.
+
+## Content
+
+All portfolio content is in [`public/js/config.js`](public/js/config.js):
+
+| Export | What it drives |
+| :--- | :--- |
+| `OWNER` | Name, role, location/timezone (header clock), contact links |
+| `PROJECTS` | The ribbon cards and their case studies: title, tagline, category, status, GitHub URL, tags, accent color, and the terminal log lines drawn on each card |
+| `EXPERIENCE` | Experience timeline in the About modal |
+| `CLIENT_WORK` | Proprietary client work listed in the About modal |
+
+To add a project, append an entry to `PROJECTS` and add a matching `drawProjectArt` branch in [`cards.js`](public/js/cards.js) for its schematic. Projects without a branch get the default radar art.
+
+## Features
+
+- **Category filters** (`ALL / OFFENSE / DEFENSE / RESEARCH`): filtered-out cards shrink and fade off the ribbon, and dragging, arrow keys and pagination only cycle through the visible set.
+- **Deep links**: `/#/<project-id>` (e.g. `/#/neurontrace`) jumps to that project and opens its case study once you enter. The hash updates as case studies open and close.
+- **Security-console card art**: every card is drawn procedurally on a canvas, with scan lines, terminal logs, and a schematic for its domain (agent toolchain, ring-0 mirror, container breakout, syscall fence, boot chain, eBPF↔WASM bridge, rogue-tower radar).
+- **SEO**: Open Graph / Twitter meta tags and JSON-LD `Person` structured data.
 
 ## Deploying to Vercel
 
-The site is fully static — everything lives in `public/`, there is no build step and no dependencies. `vercel.json` tells Vercel to serve `public/` as-is, rewrite extensionless routes to `index.html` (same as the local server), and add basic security headers.
+The site is fully static. Everything lives in `public/`. `vercel.json` serves `public/` as-is, rewrites extensionless routes to `index.html`, and adds basic security headers.
 
 ```bash
 npx vercel          # preview deployment
 npx vercel --prod   # production
 ```
 
-Or import the Git repository in the Vercel dashboard — the defaults from `vercel.json` apply automatically (Framework Preset: *Other*, no build command, output directory `public`).
+## Architecture
 
----
+| System | File |
+| :--- | :--- |
+| Momentum drag, fling, wheel, magnetic snap, keyboard nav | [input.js](public/js/input.js) |
+| 3D card ribbon, procedural card art, raycast hover, filtering | [cards.js](public/js/cards.js) |
+| Liquid ripple, chromatic aberration, click shockwave | [shaders/card.js](public/js/shaders/card.js) |
+| UI overlay, cursor, modals, filters, deep links | [ui.js](public/js/ui.js) |
+| GPU fluid simulation | [fluid.js](public/js/fluid.js) |
+| Bloom, streaks, tone mapping, grain | [post.js](public/js/post.js), [shaders/cinematic.js](public/js/shaders/cinematic.js) |
+| Synthesized ticks, latches, modal transitions | [audio.js](public/js/audio.js) |
 
-## What was improved to match Active Theory
+## Live Parameter Panel (press **G**)
 
-| Dimension | Previous Demo | Active Theory Transformation | Implementation File |
-| :--- | :--- | :--- | :--- |
-| **Physics & Motion** | Basic lerp dampening to 4 static sections | **Dual-mode momentum drag & fling** with exponential friction decay, wheel momentum, and magnetic spring snapping | [public/js/input.js](public/js/input.js) |
-| **3D Showcase** | Static central noise blob mesh | **Curved 3D Project Ribbon** with 6 procedural luxury case-study posters, depth layering, and raycasted hover detection | [public/js/cards.js](public/js/cards.js) |
-| **Liquid Shaders** | Full-screen post-processing lens distortion | **Localized surface water-ripple displacement** running directly on card textures on hover/drag with chromatic aberration and click shockwaves | [public/js/shaders/card.js](public/js/shaders/card.js) |
-| **Aerodynamics** | Rigid camera movement | **Velocity skew, roll & tilt** — cards tilt in the direction of drag velocity and elevate forward on mouse hover | [public/js/cards.js](public/js/cards.js) |
-| **Design & UI** | Sci-fi cockpit HUD (timecodes, reticle, REC) | **Active Theory Luxury Minimalist UI**: real-time dual-timezone clocks (LA/AMS), project counter `[ 01 / 06 ]`, and category filters | [public/js/ui.js](public/js/ui.js), [public/index.html](public/index.html) |
-| **Micro-Interactions** | Standard inverted CSS dot cursor | **Dynamic Contextual Cursor**: smoothly tracks pointer, skews with velocity, and adapts labels (`DRAG`, `VIEW`, `CLOSE`) | [public/js/ui.js](public/js/ui.js), [public/css/style.css](public/css/style.css) |
-| **Case Study View** | None | **Fullscreen Case Study Modal** with project overview, client/year, tech stack badges, and live demo action | [public/index.html](public/index.html), [public/js/ui.js](public/js/ui.js) |
-| **Tactile Audio** | Ambient drone and noise wind | **Mechanical click ticks** on scroll boundaries, magnetic latch snaps, and cinematic sub-bass modal transitions | [public/js/audio.js](public/js/audio.js) |
-
----
-
-## Architecture & Techniques
-
-### 1. Momentum Drag & Spring Physics ([input.js](public/js/input.js))
-- Tracks pointer displacement 1:1 during mouse drag or touch swipe.
-- Samples velocity history over recent frames to calculate a natural release velocity.
-- Coasts on release using exponential friction decay: $v_{t+1} = v_t \cdot \gamma^{\Delta t}$.
-- When velocity drops below `snapThreshold`, a critically damped spring gently latches onto the closest project card index.
-
-### 2. 3D Card Ribbon System ([cards.js](public/js/cards.js))
-- Generates 1024×640 high-resolution procedural canvas artwork for 6 case studies with sharp typography, geometric diagrams, and accent glows.
-- Arranges quads along a continuous cylindrical 3D arc ($R \approx 13.5$ units).
-- Casts camera rays into local card space using inverse model matrices to detect hover and click coordinates.
-- Applies aerodynamic velocity roll ($rotZ = -velocity \times tilt$) and hover elevation ($Z += 0.8$).
-
-### 3. Surface Liquid Shaders ([shaders/card.js](public/js/shaders/card.js))
-- Fragment shader samples card textures with mouse-driven 2D procedural wave ripples.
-- Computes velocity-driven chromatic aberration (sampling $R$ and $B$ channels with opposing directional offsets).
-- Triggers expanding concentric shockwaves on click.
-- Renders geometric edge frames, holographic rim highlights, and ambient light spots.
-
-### 4. Generative Web Audio ([audio.js](public/js/audio.js))
-- Zero audio files, pure Web Audio API synthesis.
-- Filtered triangle/sine impulses produce crisp mechanical dial ticks when scrolling past cards.
-- Double micro-click synthesis simulates a physical magnetic latch.
-- Deep sine impact + exponential filter sweep for case study modal transitions.
-
----
-
-## Tuning with Live Parameter Panel (**Press G**)
 - **Ribbon Physics:** `friction`, `dragSpeed`, `wheelSpeed`, `snapStrength`, `cardTilt`, `cardElevate`
 - **Liquid Shaders:** `liquidDistortion`, `chromaticAberration`, `cardRippleSpeed`
 - **Post-Processing:** `bloomStrength`, `bloomThreshold`, `exposure`, `grain`, `vignette`
