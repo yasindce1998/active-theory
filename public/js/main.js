@@ -1,4 +1,4 @@
-// Active Theory WebGL Experience Entry Point
+// Mohammed Yasin — Immersive WebGL Portfolio Entry Point
 // High-performance 120 FPS render loop coordinating the 3D card ribbon,
 // momentum physics, liquid shaders, ambient dust particles, audio, and UI.
 
@@ -74,14 +74,12 @@ function start() {
     const gui = new Gui(params, SCHEMA);
     const input = new Input(canvas, { sections: PROJECTS.length, params });
     const audio = new Soundscape();
-    const ui = new UI(PROJECTS, input, audio, gui);
+    const cards = new Cards(gl);
+    const ui = new UI(PROJECTS, input, audio, gui, cards);
 
     const quadVao = gl.createVertexArray();
     const sky = createProgram(gl, FULLSCREEN_VS, SKY_FS);
     const isMobile = matchMedia('(pointer: coarse)').matches;
-
-    // Core 3D systems
-    const cards = new Cards(gl);
 
     let particles;
     try {
@@ -177,14 +175,15 @@ function start() {
 
         // Update physics
         input.update(dt);
-        const activeIdx = input.activeIndex;
+        // input.activeIndex is a slot in the filtered ribbon; map to the project
+        const activeIdx = cards.visibleList[input.activeIndex] ?? 0;
         const activeProj = PROJECTS[activeIdx] || PROJECTS[0];
         const accentCol = hexToRgb(activeProj.accent);
 
         // Trigger section UI and audio updates
         if (activeIdx !== lastSection) {
             lastSection = activeIdx;
-            ui.updateProjectUI(activeIdx);
+            ui.updateProjectUI(input.activeIndex);
             audio.setSection(activeIdx);
         }
 

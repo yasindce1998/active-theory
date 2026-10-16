@@ -58,7 +58,7 @@ html:not(.entered), html:not(.entered) *,
 }
 
 /* ==========================================================================
-   Header (Active Theory Signature Studio Bar)
+   Header (Studio Bar)
    ========================================================================== */
 .top {
     position: fixed;
@@ -308,15 +308,30 @@ html:not(.entered), html:not(.entered) *,
     box-shadow: 0 0 12px rgba(0, 242, 254, 0.3);
 }
 
-.hint-drag {
+.pag-dot.filtered-out {
+    display: none;
+}
+
+.contact-links {
+    display: flex;
+    gap: 18px;
+}
+
+.contact-link {
     font-family: var(--mono);
     font-size: 10px;
     letter-spacing: 0.22em;
     color: var(--dimmer);
+    text-decoration: none;
+    transition: color 0.25s var(--ease);
+}
+
+.contact-link:hover {
+    color: var(--accent);
 }
 
 /* ==========================================================================
-   Active Theory Contextual Text Cursor
+   Contextual Text Cursor
    ========================================================================== */
 #cursor {
     position: fixed;
@@ -531,10 +546,106 @@ html:not(.entered), html:not(.entered) *,
     letter-spacing: 0.05em;
 }
 
-.modal-client, .modal-year {
+.modal-repo {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    line-height: 1.6;
+    letter-spacing: 0.05em;
+    word-break: break-all;
+}
+
+.modal-client, .modal-year, .modal-focus, .modal-status {
     font-size: 15px;
     color: #fff;
     margin-bottom: 24px;
+}
+
+.modal-stats {
+    display: flex;
+    gap: 32px;
+    margin: 24px 0;
+    padding: 20px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+}
+
+.modal-stats .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.modal-stats .stat strong {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.02em;
+}
+
+.modal-stats .stat span {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    color: var(--dimmer);
+}
+
+.modal-sub {
+    margin: 28px 0 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--dimmer);
+    text-transform: uppercase;
+}
+
+.exp-item, .client-item {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 14px;
+    color: rgba(245, 245, 248, 0.85);
+}
+
+.exp-role {
+    color: #fff;
+    font-weight: 600;
+    min-width: 220px;
+}
+
+.exp-company, .client-name {
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+}
+
+.exp-period {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--dimmer);
+}
+
+.client-item {
+    flex-wrap: wrap;
+}
+
+.client-via {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--dimmer);
+    letter-spacing: 0.1em;
+}
+
+.client-note {
+    flex-basis: 100%;
+    font-size: 12px;
+    color: var(--dim);
+    line-height: 1.5;
 }
 
 .tag-cloud {
@@ -638,7 +749,7 @@ html:not(.entered), html:not(.entered) *,
     .modal-grid { grid-template-columns: 1fr; gap: 24px; }
     .bottom-bar { padding: 0 16px; }
     .filter-tabs { display: none; }
-    .hint-drag { display: none; }
+    .contact-links { display: none; }
 }
 
 @media (max-width: 600px) {

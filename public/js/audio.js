@@ -1,4 +1,4 @@
-// Generative Soundscape & Tactile Audio System for Active Theory
+// Generative Soundscape & Tactile Audio System for the Portfolio
 // Features synthesized mechanical ticks, magnetic latch snaps,
 // velocity whooshes, modal transitions, and ambient spatial harmonic drones.
 

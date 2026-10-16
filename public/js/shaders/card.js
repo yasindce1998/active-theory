@@ -1,4 +1,4 @@
-// GLSL Shaders for 3D Project Cards in Active Theory Showcase
+// GLSL Shaders for 3D Project Cards in the Portfolio Showcase
 // Supports dynamic liquid displacement, chromatic aberration, velocity skew,
 // expanding click shockwaves, and edge specular sheen.
 
@@ -104,7 +104,7 @@ void main() {
     float b = texture(uTexture, clamp(uvB, 0.001, 0.999)).b;
     vec3 col = vec3(r, g, b);
     
-    // 5. Border frame highlight (Active Theory minimalist geometric edge)
+    // 5. Border frame highlight (minimalist geometric edge)
     vec2 edgeDist = min(uv, 1.0 - uv);
     float edge = min(edgeDist.x, edgeDist.y);
     float borderLine = smoothstep(0.012, 0.004, edge);

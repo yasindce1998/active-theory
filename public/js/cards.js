@@ -1,6 +1,6 @@
-// 3D Interactive Project Ribbon & Card Showcase for Active Theory
-// Renders textured case study cards along a curved 3D ribbon with
-// velocity-based tilt, raycasted hover detection, and liquid displacement.
+// 3D Interactive Project Ribbon for Mohammed Yasin's portfolio
+// Renders security-console themed project cards along a curved 3D ribbon
+// with velocity-based tilt, raycasted hover detection, and liquid displacement.
 
 import { createProgram, setUniforms } from './gl.js';
 import { CARD_VS, CARD_FS } from './shaders/card.js';
@@ -29,6 +29,23 @@ export class Cards {
         this.initGeometry();
         this.initTextures();
         this.initStates();
+
+        // Category filtering: null = all projects visible
+        this.visible = null;
+    }
+
+    // Logical ribbon index -> project index mapping (respects active filter)
+    get visibleList() {
+        return this.visible || this.projects.map((_, i) => i);
+    }
+
+    projectAt(logicalIndex) {
+        const list = this.visibleList;
+        return this.projects[list[((logicalIndex % list.length) + list.length) % list.length]];
+    }
+
+    setVisible(indices) {
+        this.visible = indices;
     }
 
     initGeometry() {
@@ -102,29 +119,30 @@ export class Cards {
         });
     }
 
-    // High-end minimalist editorial graphic generator for project posters
+    // Security-console themed graphic generator for project posters
     renderCardGraphic(ctx, project, w, h) {
-        // Deep luxury dark background
+        const accent = project.accent || '#00f2fe';
+
+        // Deep terminal background
         const bgGrad = ctx.createLinearGradient(0, 0, w, h);
-        bgGrad.addColorStop(0, '#0a0a0f');
-        bgGrad.addColorStop(0.5, '#07070a');
-        bgGrad.addColorStop(1, '#050508');
+        bgGrad.addColorStop(0, '#0a0a0e');
+        bgGrad.addColorStop(0.5, '#06060a');
+        bgGrad.addColorStop(1, '#040406');
         ctx.fillStyle = bgGrad;
         ctx.fillRect(0, 0, w, h);
 
-        // Ambient color accent glow in top right
-        const accent = project.accent || '#00f2fe';
-        const glow = ctx.createRadialGradient(w * 0.75, h * 0.35, 10, w * 0.75, h * 0.35, w * 0.55);
-        glow.addColorStop(0, `${accent}40`);
-        glow.addColorStop(0.4, `${accent}18`);
+        // Ambient accent glow behind the art zone
+        const glow = ctx.createRadialGradient(w * 0.68, h * 0.48, 10, w * 0.68, h * 0.48, w * 0.5);
+        glow.addColorStop(0, `${accent}30`);
+        glow.addColorStop(0.4, `${accent}12`);
         glow.addColorStop(1, 'transparent');
         ctx.fillStyle = glow;
         ctx.fillRect(0, 0, w, h);
 
-        // Background subtle grid lines
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
+        // Fine grid
+        ctx.strokeStyle = 'rgba(120, 160, 200, 0.05)';
         ctx.lineWidth = 1;
-        const gridStep = 40;
+        const gridStep = 32;
         for (let x = 0; x < w; x += gridStep) {
             ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
         }
@@ -132,65 +150,71 @@ export class Cards {
             ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
         }
 
+        // Scan lines
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.14)';
+        for (let y = 0; y < h; y += 4) {
+            ctx.fillRect(0, y, w, 1.5);
+        }
+
         // Giant background project number
         ctx.font = '900 240px "Inter", -apple-system, sans-serif';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'top';
         ctx.fillText(project.num, w - 40, 20);
 
-        // Abstract thematic geometric art based on project id
+        // Thematic schematic art per project
         ctx.save();
-        ctx.translate(w * 0.65, h * 0.52);
+        ctx.translate(w * 0.68, h * 0.46);
         this.drawProjectArt(ctx, project.id, accent);
         ctx.restore();
 
-        // Top Left: Project Index & Category Pill
-        ctx.font = '600 13px ui-monospace, SFMono-Regular, monospace';
-        ctx.fillStyle = accent;
+        // Terminal log lines (top-left, under index)
+        ctx.font = '400 12px ui-monospace, SFMono-Regular, monospace';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
+        const logs = project.logs || [];
+        logs.forEach((line, i) => {
+            const isAlert = /BLOCKED|DETECTED|LOW|escape/i.test(line);
+            ctx.fillStyle = isAlert ? 'rgba(255, 80, 90, 0.75)' : `${accent}aa`;
+            ctx.fillText(line, 48, 96 + i * 22);
+        });
+
+        // Top Left: Project Index & Category
+        ctx.font = '600 13px ui-monospace, SFMono-Regular, monospace';
+        ctx.fillStyle = accent;
         ctx.fillText(`[ ${project.num} // ${project.category} ]`, 48, 48);
 
-        // Client & Year in top right
-        ctx.font = '500 13px ui-monospace, SFMono-Regular, monospace';
+        // Status & Year in top right
+        ctx.font = '500 12px ui-monospace, SFMono-Regular, monospace';
         ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
         ctx.textAlign = 'right';
-        ctx.fillText(`${project.client} · ${project.year}`, w - 48, 48);
+        ctx.fillText(`${project.status} · ${project.year}`, w - 48, 48);
 
         // Main Project Title
-        ctx.font = '700 52px "Inter", -apple-system, sans-serif';
+        ctx.font = '700 54px "Inter", -apple-system, sans-serif';
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'bottom';
-        ctx.fillText(project.title, 48, h - 110);
+        ctx.fillText(project.title, 48, h - 108);
 
         // Tagline / Subtitle
         ctx.font = '400 17px "Inter", -apple-system, sans-serif';
         ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
-        ctx.fillText(project.tagline, 48, h - 74);
+        ctx.fillText(project.tagline, 48, h - 72);
 
-        // Bottom metadata & Awards
+        // Tech badges (bottom)
         ctx.font = '600 11px ui-monospace, SFMono-Regular, monospace';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-        ctx.fillText(`AWARDS: ${project.awards}`, 48, h - 42);
-
-        // Tech badges
-        ctx.textAlign = 'right';
         ctx.fillStyle = `${accent}bb`;
-        ctx.fillText(project.tags.slice(0, 3).join(' · '), w - 48, h - 42);
+        ctx.fillText(project.tags.slice(0, 4).join(' · '), 48, h - 42);
 
         // Framing corner crosshairs
         ctx.strokeStyle = `${accent}66`;
         ctx.lineWidth = 1.5;
         const cl = 16;
-        // Top-left
         ctx.beginPath(); ctx.moveTo(28, 28 + cl); ctx.lineTo(28, 28); ctx.lineTo(28 + cl, 28); ctx.stroke();
-        // Top-right
         ctx.beginPath(); ctx.moveTo(w - 28 - cl, 28); ctx.lineTo(w - 28, 28); ctx.lineTo(w - 28, 28 + cl); ctx.stroke();
-        // Bottom-left
         ctx.beginPath(); ctx.moveTo(28, h - 28 - cl); ctx.lineTo(28, h - 28); ctx.lineTo(28 + cl, h - 28); ctx.stroke();
-        // Bottom-right
         ctx.beginPath(); ctx.moveTo(w - 28 - cl, h - 28); ctx.lineTo(w - 28, h - 28); ctx.lineTo(w - 28, h - 28 - cl); ctx.stroke();
     }
 
@@ -199,78 +223,148 @@ export class Cards {
         ctx.fillStyle = `${accent}15`;
         ctx.lineWidth = 1.5;
 
-        if (id === 'paper-triangles') {
-            // Tessellated 3D origami crystal
+        if (id === 'redhands') {
+            // Agent-to-toolchain topology: central agent node branching to tools
+            ctx.beginPath(); ctx.arc(0, 0, 26, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.font = '700 14px ui-monospace, monospace';
+            ctx.fillStyle = accent;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('AI', 0, 1);
             for (let i = 0; i < 6; i++) {
-                const a1 = (i / 6) * Math.PI * 2;
-                const a2 = ((i + 1) / 6) * Math.PI * 2;
-                const r = 110;
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.lineTo(Math.cos(a1) * r, Math.sin(a1) * r);
-                ctx.lineTo(Math.cos(a2) * r, Math.sin(a2) * r);
-                ctx.closePath();
-                ctx.fill(); ctx.stroke();
-                // Inner diagonals
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.lineTo(Math.cos(a1) * (r * 0.5), Math.sin(a1) * (r * 0.5));
-                ctx.stroke();
+                const a = (-Math.PI / 2) + (i / 5) * Math.PI * 1.25;
+                const x = Math.cos(a) * 115;
+                const y = Math.sin(a) * 95;
+                ctx.beginPath(); ctx.moveTo(Math.cos(a) * 30, Math.sin(a) * 30); ctx.lineTo(x, y); ctx.stroke();
+                ctx.beginPath(); ctx.rect(x - 16, y - 10, 32, 20); ctx.stroke();
             }
-        } else if (id === 'dreamwave') {
-            // Concentric soundwaves / radar rings
-            for (let r = 25; r <= 125; r += 25) {
-                ctx.beginPath();
-                ctx.arc(0, 0, r, 0, Math.PI * 2);
-                ctx.stroke();
+        } else if (id === 'aegis-shadow') {
+            // Twin ring-0 modules: rootkit and auditor mirrored
+            for (const s of [-1, 1]) {
+                ctx.save(); ctx.translate(s * 78, 0);
+                ctx.beginPath(); ctx.arc(0, 0, 44, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                for (let i = 0; i < 8; i++) {
+                    const a = (i / 8) * Math.PI * 2;
+                    ctx.beginPath();
+                    ctx.moveTo(Math.cos(a) * 22, Math.sin(a) * 22);
+                    ctx.lineTo(Math.cos(a) * 44, Math.sin(a) * 44);
+                    ctx.stroke();
+                }
+                ctx.restore();
             }
+            ctx.setLineDash([6, 6]);
+            ctx.beginPath(); ctx.moveTo(-34, 0); ctx.lineTo(34, 0); ctx.stroke();
+            ctx.setLineDash([]);
+        } else if (id === 'kubedagger') {
+            // Container breakout: nested boxes with escape vector
+            ctx.strokeRect(-105, -70, 210, 140);
+            ctx.strokeRect(-70, -42, 140, 88);
+            ctx.strokeRect(-35, -16, 70, 40);
+            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = 'rgba(255, 80, 90, 0.8)';
             ctx.beginPath();
-            ctx.moveTo(-130, 0); ctx.lineTo(130, 0);
-            ctx.moveTo(0, -130); ctx.lineTo(0, 130);
+            ctx.moveTo(0, 0);
+            ctx.lineTo(95, -90);
             ctx.stroke();
-        } else if (id === 'mamba-forever') {
-            // Golden particle spiral
-            ctx.beginPath();
-            for (let a = 0; a < Math.PI * 6; a += 0.1) {
-                const r = a * 6.5;
-                const x = Math.cos(a) * r;
-                const y = Math.sin(a) * r;
-                if (a === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+            ctx.setLineDash([]);
+            ctx.beginPath(); ctx.arc(95, -90, 5, 0, Math.PI * 2); ctx.fill();
+        } else if (id === 'neurontrace') {
+            // Syscall fence: neural net bounded by kernel wall
+            for (let layer = 0; layer < 3; layer++) {
+                const lx = -80 + layer * 62;
+                for (let n = 0; n < 3 - Math.abs(layer - 1); n++) {
+                    const ny = (n - 1) * 44 + (layer === 1 ? 0 : 22);
+                    ctx.beginPath(); ctx.arc(lx, ny, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                    if (layer < 2) {
+                        for (let m = 0; m < 2; m++) {
+                            const my = (m - 0.5) * 44;
+                            ctx.beginPath(); ctx.moveTo(lx + 9, ny); ctx.lineTo(lx + 53, my); ctx.stroke();
+                        }
+                    }
+                }
             }
-            ctx.stroke();
-        } else if (id === 'cyberpunk-city') {
-            // Isometric futuristic city blocks & crosshairs
-            for (let i = -3; i <= 3; i++) {
-                ctx.beginPath();
-                ctx.moveTo(i * 30, -90);
-                ctx.lineTo(i * 30, 90);
-                ctx.stroke();
+            // Kernel boundary wall
+            ctx.strokeStyle = 'rgba(255, 80, 90, 0.75)';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath(); ctx.moveTo(58, -85); ctx.lineTo(58, 85); ctx.stroke();
+            for (let y = -85; y <= 85; y += 24) {
+                ctx.beginPath(); ctx.moveTo(58, y); ctx.lineTo(66, y); ctx.stroke();
             }
-            ctx.beginPath();
-            ctx.arc(0, 0, 70, 0, Math.PI * 2);
-            ctx.stroke();
-        } else if (id === 'medusa-engine') {
-            // Micro-architecture hexagonal node mesh
-            for (let i = 0; i < 7; i++) {
+        } else if (id === 'barzakh') {
+            // Boot chain: UEFI → bootloader → kernel stages
+            const stages = ['UEFI', 'SHIM', 'GRUB', 'KERNEL'];
+            ctx.font = '600 11px ui-monospace, monospace';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            stages.forEach((s, i) => {
+                const x = -110 + i * 74;
+                ctx.strokeRect(x - 28, -16, 56, 32);
+                ctx.fillStyle = accent;
+                ctx.fillText(s, x, 1);
+                if (i < 3) {
+                    ctx.beginPath(); ctx.moveTo(x + 30, 0); ctx.lineTo(x + 44, 0); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(x + 40, -5); ctx.lineTo(x + 46, 0); ctx.lineTo(x + 40, 5); ctx.stroke();
+                }
+            });
+            ctx.strokeStyle = 'rgba(255, 80, 90, 0.7)';
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath(); ctx.moveTo(-124, 34); ctx.lineTo(124, 34); ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = 'rgba(255, 80, 90, 0.85)';
+            ctx.font = '600 10px ui-monospace, monospace';
+            ctx.fillText('TRUST BOUNDARY', 0, 48);
+        } else if (id === 'warmor') {
+            // Two runtimes bridged: eBPF hex ring + WASM module
+            ctx.save(); ctx.translate(-72, 0);
+            for (let i = 0; i < 6; i++) {
                 const a = (i / 6) * Math.PI * 2;
-                const x = Math.cos(a) * 75;
-                const y = Math.sin(a) * 75;
+                const x = Math.cos(a) * 42, y = Math.sin(a) * 42;
+                ctx.beginPath(); ctx.arc(x, y, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                const a2 = ((i + 1) / 6) * Math.PI * 2;
                 ctx.beginPath();
-                ctx.arc(x, y, 12, 0, Math.PI * 2);
-                ctx.fill(); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(x, y); ctx.stroke();
-            }
-            ctx.beginPath(); ctx.arc(0, 0, 24, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        } else {
-            // Fluid streamline contours
-            for (let i = 0; i < 5; i++) {
-                ctx.beginPath();
-                const y = (i - 2) * 36;
-                ctx.moveTo(-120, y);
-                ctx.bezierCurveTo(-60, y - 40, 60, y + 40, 120, y);
+                ctx.moveTo(x, y);
+                ctx.lineTo(Math.cos(a2) * 42, Math.sin(a2) * 42);
                 ctx.stroke();
             }
+            ctx.font = '600 11px ui-monospace, monospace';
+            ctx.fillStyle = accent; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('eBPF', 0, 0);
+            ctx.restore();
+            ctx.save(); ctx.translate(72, 0);
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+                const a = (i / 6) * Math.PI * 2 + Math.PI / 6;
+                const x = Math.cos(a) * 40, y = Math.sin(a) * 40;
+                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            }
+            ctx.closePath(); ctx.stroke();
+            ctx.fillStyle = accent;
+            ctx.font = '600 11px ui-monospace, monospace';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('WASM', 0, 0);
+            ctx.restore();
+            // Bridge events flowing between them
+            for (let i = 0; i < 3; i++) {
+                const y = -18 + i * 18;
+                ctx.beginPath(); ctx.moveTo(-26, y); ctx.lineTo(26, y); ctx.stroke();
+                ctx.beginPath(); ctx.arc(-2 + i * 4, y, 3, 0, Math.PI * 2); ctx.fill();
+            }
+        } else {
+            // StaticZero default: cellular tower radar with rogue detection
+            for (let r = 30; r <= 120; r += 30) {
+                ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
+            }
+            // Sweep wedge
+            ctx.fillStyle = `${accent}20`;
+            ctx.beginPath(); ctx.moveTo(0, 0);
+            ctx.arc(0, 0, 120, -0.5, 0.1); ctx.closePath(); ctx.fill();
+            // Tower
+            ctx.beginPath();
+            ctx.moveTo(-10, 34); ctx.lineTo(0, -18); ctx.lineTo(10, 34); ctx.closePath(); ctx.stroke();
+            // Rogue tower blip
+            ctx.strokeStyle = 'rgba(255, 80, 90, 0.85)';
+            ctx.fillStyle = 'rgba(255, 80, 90, 0.9)';
+            ctx.beginPath(); ctx.arc(-72, -54, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.arc(-72, -54, 14, 0, Math.PI * 2); ctx.stroke();
         }
     }
 
@@ -283,6 +377,7 @@ export class Cards {
             invModelMatrix: mat4Create(),
             pos: [0, 0, 0],
             hover: 0,
+            alpha: 1,
             pointer: [0.5, 0.5],
             ripple: [0.5, 0.5, 999.0, 0.0] // x, y, age, intensity
         }));
@@ -318,6 +413,7 @@ export class Cards {
 
         for (let i = 0; i < this.cardStates.length; i++) {
             const card = this.cardStates[i];
+            if ((card.alpha ?? 1) < 0.5) continue;
             const invM = card.invModelMatrix;
 
             // Transform ray origin and direction into card's local object space
@@ -377,14 +473,22 @@ export class Cards {
         const spacingRad = (params.cardSpacing || 3.5) / radius;
         const tiltFactor = params.cardTilt || 1.3;
         const elevateDist = params.cardElevate || 0.8;
+        const list = this.visibleList;
+        const M = list.length;
 
         for (let i = 0; i < N; i++) {
             const card = this.cardStates[i];
+            const logical = list.indexOf(i);
 
-            // Circular wrapping around active scroll position
-            let diff = (i - scrollProgress);
-            // Wrap to range [-N/2, N/2]
-            diff = ((diff % N) + N * 1.5) % N - N * 0.5;
+            // Cards outside the active filter fade out
+            const targetAlpha = logical === -1 ? 0 : 1;
+            card.alpha = damp(card.alpha ?? 1, targetAlpha, 8, dt);
+            if (card.alpha < 0.01 && logical === -1) continue;
+
+            // Circular wrapping around active scroll position (over logical list)
+            let diff = (logical - scrollProgress);
+            // Wrap to range [-M/2, M/2]
+            diff = ((diff % M) + M * 1.5) % M - M * 0.5;
 
             const theta = diff * spacingRad;
             const x = Math.sin(theta) * radius;
@@ -435,6 +539,8 @@ export class Cards {
             // Scale slightly on hover
             const s = 1.0 + card.hover * 0.04;
             mat4Scale(m, m, [s, s, 1.0]);
+            // Filtered-out cards shrink away as they fade
+            if (card.alpha < 1) mat4Scale(m, m, [card.alpha, card.alpha, 1.0]);
 
             // Cache inverse matrix for raycasting
             mat4Invert(card.invModelMatrix, m);

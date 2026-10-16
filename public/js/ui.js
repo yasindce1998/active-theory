@@ -1,6 +1,7 @@
-// Active Theory Minimalist Editorial UI, Dynamic Cursor & Case Study Modal
+// Portfolio UI, Dynamic Cursor & Case Study Modal
 
 import { damp } from './math.js';
+import { OWNER, EXPERIENCE, CLIENT_WORK } from './config.js';
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const GLYPHS = '01<>/\\[]{}#%&*+=-_ABCDEFGHJKLMNPRSTUVWXYZ';
@@ -33,11 +34,12 @@ function decode(el, text, { duration = 800, delay = 0 } = {}) {
 const pad = (n, l = 2) => String(Math.floor(n)).padStart(l, '0');
 
 export class UI {
-    constructor(projects, input, audio, gui) {
+    constructor(projects, input, audio, gui, cards) {
         this.projects = projects;
         this.input = input;
         this.audio = audio;
         this.gui = gui;
+        this.cards = cards;
 
         this.current = 0;
         this.onEnter = null;
@@ -71,8 +73,6 @@ export class UI {
         this.modalTagline = document.getElementById('modal-tagline');
         this.modalHeroGlow = document.getElementById('modal-hero-glow');
         this.modalDesc = document.getElementById('modal-desc');
-        this.modalAwards = document.getElementById('modal-awards');
-        this.modalClient = document.getElementById('modal-client');
         this.modalYear = document.getElementById('modal-year');
         this.modalTags = document.getElementById('modal-tags');
 
@@ -113,6 +113,13 @@ export class UI {
             this.cursor?.classList.add('visible');
             this.onEnter?.(withSound);
             if (withSound) this.setSound(true);
+
+            // Deep link (#/project-id): jump the ribbon there and open its case study
+            const linked = this.projects.findIndex(p => `#/${p.id}` === location.hash);
+            if (linked !== -1) {
+                this.input.goTo(linked);
+                setTimeout(() => this.openCaseStudy(this.projects[linked]), reduceMotion ? 0 : 1200);
+            }
             setTimeout(() => this.updateProjectUI(this.current, true), reduceMotion ? 0 : 800);
         };
 
@@ -131,16 +138,12 @@ export class UI {
         const updateTimes = () => {
             try {
                 const now = new Date();
-                const la = new Intl.DateTimeFormat('en-US', {
-                    timeZone: 'America/Los_Angeles',
-                    hour: '2-digit', minute: '2-digit', hour12: false
-                }).format(now);
-                const ams = new Intl.DateTimeFormat('en-US', {
-                    timeZone: 'Europe/Amsterdam',
+                const blr = new Intl.DateTimeFormat('en-US', {
+                    timeZone: OWNER.timezone,
                     hour: '2-digit', minute: '2-digit', hour12: false
                 }).format(now);
                 if (this.telemetryTime) {
-                    this.telemetryTime.textContent = `LA ${la} // AMS ${ams}`;
+                    this.telemetryTime.textContent = `BLR ${blr} // ${OWNER.coords}`;
                 }
             } catch (e) {
                 // Fallback
@@ -159,7 +162,10 @@ export class UI {
             btn.textContent = p.num;
             btn.setAttribute('aria-label', `Navigate to ${p.title}`);
             btn.addEventListener('click', () => {
-                this.input.goTo(i);
+                // Map project index to its slot in the filtered ribbon
+                if (!this.cards) return this.input.goTo(i);
+                const slot = this.cards.visibleList.indexOf(i);
+                if (slot !== -1) this.input.goTo(slot);
                 this.audio.tick(2200);
             });
             btn.addEventListener('mouseenter', () => this.audio.blip(80, 0.02));
@@ -176,15 +182,39 @@ export class UI {
                 btn.classList.add('active');
                 const filter = btn.dataset.filter;
                 this.audio.tick(1600);
-
-                if (filter === 'ALL') {
-                    this.input.goTo(0);
-                } else {
-                    const idx = this.projects.findIndex(p => p.category === filter);
-                    if (idx !== -1) this.input.goTo(idx);
-                }
+                this.applyFilter(filter);
             });
         });
+    }
+
+    // Applies a category filter to the ribbon and re-anchors navigation
+    applyFilter(filter) {
+        const cards = this.cards;
+        if (!cards) return;
+
+        if (filter === 'ALL') {
+            cards.setVisible(null);
+            this.input.visibleCount = this.projects.length;
+        } else {
+            const indices = this.projects
+                .map((p, i) => p.category === filter ? i : -1)
+                .filter(i => i !== -1);
+            if (indices.length === 0) return;
+            cards.setVisible(indices);
+            this.input.visibleCount = indices.length;
+        }
+
+        // Re-anchor: ribbon target moves to slot 0 of the filtered set,
+        // wrapping from wherever it currently is
+        const N = this.input.visibleCount;
+        const from = Math.round(this.input.scroll.target);
+        const cur = ((from % N) + N) % N;
+        this.input.scroll.target = from - cur;
+        this.input.scroll.velocity = 0;
+
+        // Hide pagination dots for filtered-out projects
+        this.pagDots?.forEach((dot, i) =>
+            dot.classList.toggle('filtered-out', cards.visibleList.indexOf(i) === -1));
     }
 
     initModals() {
@@ -234,6 +264,32 @@ export class UI {
         this.infoOpen = false;
         this.setModalVisible(this.infoModal, false);
         this.audio.tick(1400);
+    }
+
+    // Fills the About modal with experience timeline and client work (once)
+    initAboutContent() {
+        if (this._aboutPopulated) return;
+        this._aboutPopulated = true;
+
+        const expList = document.getElementById('exp-list');
+        if (expList) {
+            expList.innerHTML = EXPERIENCE.map(e => `
+                <div class="exp-item">
+                    <span class="exp-role">${e.role}</span>
+                    <span class="exp-company">${e.company}</span>
+                    <span class="exp-period">${e.period}</span>
+                </div>`).join('');
+        }
+
+        const clientList = document.getElementById('client-list');
+        if (clientList) {
+            clientList.innerHTML = CLIENT_WORK.map(c => `
+                <div class="client-item">
+                    <span class="client-name">${c.client}</span>
+                    <span class="client-via">via ${c.via}</span>
+                    <span class="client-note">${c.note}</span>
+                </div>`).join('');
+        }
     }
 
     initCursorEvents() {
@@ -292,9 +348,18 @@ export class UI {
         this.modalTitle.textContent = project.title;
         this.modalTagline.textContent = project.tagline;
         this.modalDesc.textContent = project.description;
-        this.modalAwards.textContent = project.awards;
-        this.modalClient.textContent = project.client;
-        this.modalYear.textContent = project.year;
+
+        const focus = document.getElementById('modal-focus');
+        const status = document.getElementById('modal-status');
+        const repo = document.getElementById('modal-repo');
+        const launch = document.getElementById('modal-launch');
+        if (focus) focus.textContent = project.focus || '—';
+        if (status) status.textContent = project.status || '—';
+        if (repo) repo.textContent = project.url ? project.url.replace('https://', '') : '—';
+        if (launch && project.url) {
+            launch.href = project.url;
+            launch.textContent = 'VIEW SOURCE ↗';
+        }
 
         // Accent glow
         const accent = project.accent || '#00f2fe';
@@ -304,8 +369,12 @@ export class UI {
         // Tags
         this.modalTags.innerHTML = project.tags.map(t => `<span class="tech-tag">${t}</span>`).join('');
 
+        // Populate About modal once on first open
+        this.initAboutContent();
+
         this.setModalVisible(this.modal, true, this.modalClose);
         this.modal.querySelector('.modal-container').scrollTop = 0;
+        history.replaceState(null, '', `#/${project.id}`);
         this.setCursorState('close');
         this.audio.modalOpen();
     }
@@ -314,16 +383,19 @@ export class UI {
         if (!this.modalOpen) return;
         this.modalOpen = false;
         this.setModalVisible(this.modal, false);
+        history.replaceState(null, '', location.pathname);
         document.documentElement.style.setProperty('--accent', this.projects[this.current].accent);
         this.setCursorState('drag');
         this.audio.modalClose();
     }
 
-    updateProjectUI(index, force = false) {
+    updateProjectUI(logicalIndex, force = false) {
+        // Map ribbon slot through the active filter to the real project
+        const p = this.cards ? this.cards.projectAt(logicalIndex) : this.projects[logicalIndex];
+        if (!p) return;
+        const index = this.projects.indexOf(p);
         if (index === this.current && !force) return;
         this.current = index;
-        const p = this.projects[index];
-        if (!p) return;
 
         // Update accent CSS variable
         document.documentElement.style.setProperty('--accent', p.accent);
